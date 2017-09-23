@@ -14,8 +14,8 @@ import (
 func main() {
 	// Create command line parser
 	app := &cobra.Command{
-		Use:   "cellar-cli",
-		Short: `CLI client for the cellar service`,
+		Use:   "letto-cli",
+		Short: `CLI client for the letto service`,
 	}
 
 	// Create client struct
@@ -29,7 +29,7 @@ func main() {
 	app.PersistentFlags().BoolVar(&c.Dump, "dump", false, "Dump HTTP request and response.")
 
 	// Initialize API client
-	c.UserAgent = "cellar-cli/0"
+	c.UserAgent = "letto-cli/0"
 
 	// Register API commands
 	cli.RegisterCommands(app, c)

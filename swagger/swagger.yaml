@@ -4,74 +4,163 @@ consumes:
 - application/gob
 - application/x-gob
 definitions:
-  GoaExampleBottle:
-    description: A bottle of wine (default view)
+  LettoWorkflow:
+    description: An automation workflow (default view)
     example:
-      href: Voluptates non excepturi.
-      id: 6.9965735e+18
-      name: Tenetur et saepe ratione debitis enim sapiente.
+      description: Repellat aut eos.
+      href: Odio fuga alias.
+      name: Distinctio consectetur sequi atque.
+      uuid: Qui quia.
     properties:
-      href:
-        description: API href for making requests on the bottle
-        example: Voluptates non excepturi.
+      description:
+        description: Longer description of the workflow
+        example: Repellat aut eos.
         type: string
-      id:
-        description: Unique bottle ID
-        example: 6.9965735e+18
-        format: int64
-        type: integer
+      href:
+        description: API href for reading a workflow
+        example: Odio fuga alias.
+        type: string
       name:
-        description: Name of wine
-        example: Tenetur et saepe ratione debitis enim sapiente.
+        description: Name for the workflow
+        example: Distinctio consectetur sequi atque.
+        type: string
+      uuid:
+        description: Workflow UUID
+        example: Qui quia.
         type: string
     required:
-    - id
+    - uuid
     - href
     - name
-    title: 'Mediatype identifier: application/vnd.goa.example.bottle+json; view=default'
+    title: 'Mediatype identifier: application/letto.workflow+json; view=default'
+    type: object
+  LettoWorkflowlist:
+    description: LettoWorkflowlist media type (default view)
+    properties:
+      links:
+        $ref: '#/definitions/LettoWorkflowlistLinks'
+    title: 'Mediatype identifier: application/letto.workflowlist+json; view=default'
+    type: object
+  LettoWorkflowlistLinks:
+    description: LettoWorkflowlistLinks contains links to related resources of LettoWorkflowlist.
+    title: LettoWorkflowlistLinks
     type: object
 host: localhost:9292
 info:
-  description: A simple goa service
-  title: The virtual wine cellar
+  description: Go/Goa service providing the backend API for Letto
+  title: The place for your complex workflows
   version: ""
 paths:
-  /bottles/{bottleID}:
+  /workflows/:
     get:
-      description: Get bottle by id
-      operationId: bottle#show
-      parameters:
-      - description: Bottle ID
-        in: path
-        name: bottleID
-        required: true
-        type: integer
+      description: List workflows
+      operationId: workflow#list
       produces:
-      - application/vnd.goa.example.bottle+json
+      - application/letto.workflowlist+json
       responses:
         "200":
-          description: OK
+          description: Successful response
           schema:
-            $ref: '#/definitions/GoaExampleBottle'
+            $ref: '#/definitions/LettoWorkflowlist'
         "404":
-          description: Not Found
+          description: Content not found
       schemes:
       - http
-      summary: show bottle
+      summary: list workflow
       tags:
-      - bottle
+      - workflow
+    post:
+      description: Create a new workflow
+      operationId: workflow#create
+      produces:
+      - application/letto.workflow+json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/LettoWorkflow'
+        "404":
+          description: Content not found
+      schemes:
+      - http
+      summary: create workflow
+      tags:
+      - workflow
+  /workflows/{workflowUUID}:
+    delete:
+      description: Delete a workflow by UUID
+      operationId: workflow#delete
+      parameters:
+      - description: Workflow UUID
+        in: path
+        name: workflowUUID
+        required: true
+        type: string
+      produces:
+      - application/letto.workflow+json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/LettoWorkflow'
+        "404":
+          description: Content not found
+      schemes:
+      - http
+      summary: delete workflow
+      tags:
+      - workflow
+    get:
+      description: Read a workflow by UUID
+      operationId: workflow#read
+      parameters:
+      - description: Workflow UUID
+        in: path
+        name: workflowUUID
+        required: true
+        type: string
+      produces:
+      - application/letto.workflow+json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/LettoWorkflow'
+        "404":
+          description: Content not found
+      schemes:
+      - http
+      summary: read workflow
+      tags:
+      - workflow
+    put:
+      description: Update an existing workflow by UUID
+      operationId: workflow#update
+      parameters:
+      - description: Workflow UUID
+        in: path
+        name: workflowUUID
+        required: true
+        type: string
+      produces:
+      - application/letto.workflow+json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/LettoWorkflow'
+        "404":
+          description: Content not found
+      schemes:
+      - http
+      summary: update workflow
+      tags:
+      - workflow
 produces:
 - application/json
 - application/xml
 - application/gob
 - application/x-gob
-responses:
-  NotFound:
-    description: Not Found
-  OK:
-    description: OK
-    schema:
-      $ref: '#/definitions/GoaExampleBottle'
 schemes:
 - http
 swagger: "2.0"
