@@ -22,8 +22,8 @@ func main() {
 	service.Use(middleware.Recover())
 
 	// Mount controllers
-	c := controllers.NewWorkflowController(service, &s3)
-	app.MountWorkflowController(service, c)
+	app.MountWorkflowController(service, controllers.NewWorkflowController(service, &s3))
+	app.MountTriggersController(service, controllers.NewTriggersController(service))
 
 	// Start service
 	if err := service.ListenAndServe(":9292"); err != nil {

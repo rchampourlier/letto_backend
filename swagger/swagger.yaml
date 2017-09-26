@@ -1,32 +1,55 @@
+basePath: /api
 consumes:
 - application/json
 - application/xml
 - application/gob
 - application/x-gob
 definitions:
+  CreateWorkflowPayload:
+    example:
+      group: Jordane Krajcik
+      name: Eos sed quibusdam qui quia.
+      source: Ut ex id qui.
+    properties:
+      group:
+        description: A way of grouping workflows together to be triggered by a specific
+          endpoint's URL
+        example: Jordane Krajcik
+        pattern: \A[\w-]+\z
+        type: string
+      name:
+        description: Name of the workflow
+        example: Eos sed quibusdam qui quia.
+        type: string
+      source:
+        description: Source code to execute for this workflow
+        example: Ut ex id qui.
+        type: string
+    required:
+    - source
+    - name
+    - group
+    title: CreateWorkflowPayload
+    type: object
   LettoWorkflow:
     description: An automation workflow (default view)
     example:
-      description: Repellat aut eos.
-      href: Odio fuga alias.
-      name: Distinctio consectetur sequi atque.
-      uuid: Qui quia.
+      href: Repellat aut eos.
+      name: Odio fuga alias.
+      uuid: 66921ed1-5650-43fd-8d70-2b4a2ff4d783
     properties:
-      description:
-        description: Longer description of the workflow
-        example: Repellat aut eos.
-        type: string
       href:
         description: API href for reading a workflow
-        example: Odio fuga alias.
+        example: Repellat aut eos.
         type: string
       name:
         description: Name for the workflow
-        example: Distinctio consectetur sequi atque.
+        example: Odio fuga alias.
         type: string
       uuid:
         description: Workflow UUID
-        example: Qui quia.
+        example: 66921ed1-5650-43fd-8d70-2b4a2ff4d783
+        format: uuid
         type: string
     required:
     - uuid
@@ -34,56 +57,144 @@ definitions:
     - name
     title: 'Mediatype identifier: application/letto.workflow+json; view=default'
     type: object
-  LettoWorkflowlist:
-    description: LettoWorkflowlist media type (default view)
+  LettoWorkflow_list:
+    description: LettoWorkflow_list media type (default view)
     properties:
       links:
-        $ref: '#/definitions/LettoWorkflowlistLinks'
-    title: 'Mediatype identifier: application/letto.workflowlist+json; view=default'
+        $ref: '#/definitions/LettoWorkflow_listLinks'
+    title: 'Mediatype identifier: application/letto.workflow_list+json; view=default'
     type: object
-  LettoWorkflowlistLinks:
-    description: LettoWorkflowlistLinks contains links to related resources of LettoWorkflowlist.
-    title: LettoWorkflowlistLinks
+  LettoWorkflow_listLinks:
+    description: LettoWorkflow_listLinks contains links to related resources of LettoWorkflow_list.
+    title: LettoWorkflow_listLinks
+    type: object
+  error:
+    description: Error response media type (default view)
+    example:
+      code: invalid_value
+      detail: Value of ID must be an integer
+      id: 3F1FKVRR
+      meta:
+        timestamp: 1.458609e+09
+      status: "400"
+    properties:
+      code:
+        description: an application-specific error code, expressed as a string value.
+        example: invalid_value
+        type: string
+      detail:
+        description: a human-readable explanation specific to this occurrence of the
+          problem.
+        example: Value of ID must be an integer
+        type: string
+      id:
+        description: a unique identifier for this particular occurrence of the problem.
+        example: 3F1FKVRR
+        type: string
+      meta:
+        additionalProperties: true
+        description: a meta object containing non-standard meta-information about
+          the error.
+        example:
+          timestamp: 1.458609e+09
+        type: object
+      status:
+        description: the HTTP status code applicable to this problem, expressed as
+          a string value.
+        example: "400"
+        type: string
+    title: 'Mediatype identifier: application/vnd.goa.error; view=default'
     type: object
 host: localhost:9292
 info:
-  description: Go/Goa service providing the backend API for Letto
+  description: Go service providing the backend API for Letto
   title: The place for your complex workflows
   version: ""
 paths:
+  /triggers/{group}:
+    get:
+      description: Receive incoming webhook
+      operationId: triggers#webhook
+      parameters:
+      - in: path
+        name: group
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+      schemes:
+      - http
+      summary: webhook triggers
+      tags:
+      - triggers
+    post:
+      description: Receive incoming webhook
+      operationId: triggers#webhook#1
+      parameters:
+      - in: path
+        name: group
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+      schemes:
+      - http
+      summary: webhook triggers
+      tags:
+      - triggers
+  /workflows:
+    post:
+      description: Create a new workflow
+      operationId: workflow#create
+      parameters:
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/CreateWorkflowPayload'
+      produces:
+      - application/vnd.goa.error
+      responses:
+        "201":
+          description: Resource created
+          headers:
+            Location:
+              description: href to created resource
+              pattern: \A/workflows/[^/]+/[\w-]+\z
+              type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: create workflow
+      tags:
+      - workflow
   /workflows/:
     get:
       description: List workflows
       operationId: workflow#list
       produces:
-      - application/letto.workflowlist+json
+      - application/letto.workflow_list+json
       responses:
         "200":
-          description: Successful response
+          description: OK
           schema:
-            $ref: '#/definitions/LettoWorkflowlist'
-        "404":
-          description: Content not found
+            $ref: '#/definitions/LettoWorkflow_list'
       schemes:
       - http
       summary: list workflow
-      tags:
-      - workflow
-    post:
-      description: Create a new workflow
-      operationId: workflow#create
-      produces:
-      - application/letto.workflow+json
-      responses:
-        "200":
-          description: Successful response
-          schema:
-            $ref: '#/definitions/LettoWorkflow'
-        "404":
-          description: Content not found
-      schemes:
-      - http
-      summary: create workflow
       tags:
       - workflow
   /workflows/{workflowUUID}:
@@ -100,11 +211,9 @@ paths:
       - application/letto.workflow+json
       responses:
         "200":
-          description: Successful response
+          description: OK
           schema:
             $ref: '#/definitions/LettoWorkflow'
-        "404":
-          description: Content not found
       schemes:
       - http
       summary: delete workflow
@@ -123,11 +232,9 @@ paths:
       - application/letto.workflow+json
       responses:
         "200":
-          description: Successful response
+          description: OK
           schema:
             $ref: '#/definitions/LettoWorkflow'
-        "404":
-          description: Content not found
       schemes:
       - http
       summary: read workflow
@@ -146,11 +253,9 @@ paths:
       - application/letto.workflow+json
       responses:
         "200":
-          description: Successful response
+          description: OK
           schema:
             $ref: '#/definitions/LettoWorkflow'
-        "404":
-          description: Content not found
       schemes:
       - http
       summary: update workflow
@@ -161,6 +266,9 @@ produces:
 - application/xml
 - application/gob
 - application/x-gob
+responses:
+  OK:
+    description: OK
 schemes:
 - http
 swagger: "2.0"

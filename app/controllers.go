@@ -20,15 +20,40 @@ import (
 func initService(service *goa.Service) {
 	// Setup encoders and decoders
 	service.Encoder.Register(goa.NewJSONEncoder, "application/json")
-	service.Encoder.Register(goa.NewGobEncoder, "application/gob", "application/x-gob")
-	service.Encoder.Register(goa.NewXMLEncoder, "application/xml")
 	service.Decoder.Register(goa.NewJSONDecoder, "application/json")
-	service.Decoder.Register(goa.NewGobDecoder, "application/gob", "application/x-gob")
-	service.Decoder.Register(goa.NewXMLDecoder, "application/xml")
 
 	// Setup default encoder and decoder
 	service.Encoder.Register(goa.NewJSONEncoder, "*/*")
 	service.Decoder.Register(goa.NewJSONDecoder, "*/*")
+}
+
+// TriggersController is the controller interface for the Triggers actions.
+type TriggersController interface {
+	goa.Muxer
+	Webhook(*WebhookTriggersContext) error
+}
+
+// MountTriggersController "mounts" a Triggers resource controller on the given service.
+func MountTriggersController(service *goa.Service, ctrl TriggersController) {
+	initService(service)
+	var h goa.Handler
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewWebhookTriggersContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Webhook(rctx)
+	}
+	service.Mux.Handle("GET", "/api/triggers/webhook/*group", ctrl.MuxHandler("webhook", h, nil))
+	service.LogInfo("mount", "ctrl", "Triggers", "action", "Webhook", "route", "GET /api/triggers/webhook/*group")
+	service.Mux.Handle("POST", "/api/triggers/webhook/*group", ctrl.MuxHandler("webhook", h, nil))
+	service.LogInfo("mount", "ctrl", "Triggers", "action", "Webhook", "route", "POST /api/triggers/webhook/*group")
 }
 
 // WorkflowController is the controller interface for the Workflow actions.

@@ -11,6 +11,8 @@ var _ = API("letto", func() {
 	Host("localhost:9292")
 	Scheme("http")
 	BasePath("/api")
+	Consumes("application/json")
+	Produces("application/json")
 
 	ResponseTemplate(Created, func(pattern string) {
 		Description("Resource created")
@@ -20,6 +22,16 @@ var _ = API("letto", func() {
 				Pattern(pattern)
 			})
 		})
+	})
+})
+
+var _ = Resource("triggers", func() {
+	BasePath("/triggers")
+
+	Action("webhook", func() {
+		Description("Receive incoming webhook")
+		Routing(GET("/webhook/*group"), POST("/webhook/*group"))
+		Response(OK)
 	})
 })
 

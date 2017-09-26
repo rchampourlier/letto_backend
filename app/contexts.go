@@ -16,6 +16,39 @@ import (
 	"net/http"
 )
 
+// WebhookTriggersContext provides the triggers webhook action context.
+type WebhookTriggersContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	Group string
+}
+
+// NewWebhookTriggersContext parses the incoming request URL and body, performs validations and creates the
+// context used by the triggers controller webhook action.
+func NewWebhookTriggersContext(ctx context.Context, r *http.Request, service *goa.Service) (*WebhookTriggersContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := WebhookTriggersContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramGroup := req.Params["group"]
+	if len(paramGroup) > 0 {
+		rawGroup := paramGroup[0]
+		rctx.Group = rawGroup
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *WebhookTriggersContext) OK(resp []byte) error {
+	ctx.ResponseData.Header().Set("Content-Type", "text/plain")
+	ctx.ResponseData.WriteHeader(200)
+	_, err := ctx.ResponseData.Write(resp)
+	return err
+}
+
 // CreateWorkflowContext provides the workflow create action context.
 type CreateWorkflowContext struct {
 	context.Context
