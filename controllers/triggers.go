@@ -2,11 +2,14 @@ package controllers
 
 import (
 	"bytes"
+	"io/ioutil"
 
 	"github.com/goadesign/goa"
 	"github.com/rchampourlier/letto_go/app"
 	"github.com/rchampourlier/letto_go/exec"
 )
+
+var tmpDirPrefix = "letto"
 
 // TriggersController implements the triggers resource.
 type TriggersController struct {
@@ -22,16 +25,15 @@ func NewTriggersController(service *goa.Service) *TriggersController {
 func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 	// TriggersController_Webhook: start_implement
 
-	body := readBody(ctx)
-	headers := readHeaders(ctx)
+	group := ctx.Group
+	//body := readBody(ctx)
+	//headers := readHeaders(ctx)
+	tmpDir, err := ioutil.TempDir("", tmpDirPrefix)
+	if err != nil {
+		panic("Could not create temp directory. Abandoning.")
+	}
 
-	script := `
-	var xmlHttp = new XMLHttpRequest();
-	xmlHttp.open( "GET", "www.google.fr", false );
-        xmlHttp.send( null );
-        console.log(xmlHttp.responseText);
-	`
-	exec.RunJS(script, body, headers)
+	exec.RunJS(group, tmpDir)
 
 	// TriggersController_Webhook: end_implement
 	return nil

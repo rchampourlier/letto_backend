@@ -1,6 +1,14 @@
-package main
+// This file provides JS execution through Docker.
+//
+// It comes with an unique `Run` function that may
+// be used to simply execute a Docker container
+// with a reduced set of parameters.
+
+package js
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"os"
 
@@ -10,27 +18,37 @@ import (
 	"golang.org/x/net/context"
 )
 
-func main() {
+// DockerConfig defines the config of the Docker container
+// to be run.
+type DockerConfig struct {
+	Image      string
+	Command    []string
+	Volumes    map[string]struct{}
+	WorkingDir string
+	Binds      []string
+}
+
+// Run executes a Docker container with the specified
+// parameters.
+func Run(cfg DockerConfig) {
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = cli.ImagePull(ctx, "node", types.ImagePullOptions{})
+	_, err = cli.ImagePull(ctx, cfg.Image, types.ImagePullOptions{})
 	if err != nil {
 		panic(err)
 	}
 
-	dir, _ := os.Getwd()
-
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image:      "node:4",
-		Cmd:        []string{"node", "./test.js"},
-		Volumes:    map[string]struct{}{"/usr/src/app": {}},
-		WorkingDir: "/usr/src/app",
+		Image:      cfg.Image,
+		Cmd:        cfg.Command,
+		Volumes:    cfg.Volumes,
+		WorkingDir: cfg.WorkingDir,
 	}, &container.HostConfig{
-		Binds: []string{dir + ":/usr/src/app"},
+		Binds: cfg.Binds,
 	}, nil, "")
 	if err != nil {
 		panic(err)
@@ -53,6 +71,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(out)
+	s := buf.String()
+	fmt.Printf("---> %s\n", s)
 
 	io.Copy(os.Stdout, out)
 }
