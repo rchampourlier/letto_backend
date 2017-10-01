@@ -2,14 +2,20 @@ package controllers
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"path"
 
 	"github.com/goadesign/goa"
+	"github.com/spf13/afero"
+
 	"github.com/rchampourlier/letto_go/app"
 	"github.com/rchampourlier/letto_go/exec"
 )
 
 var tmpDirPrefix = "letto"
+var appFs = afero.NewOsFs()
 
 // TriggersController implements the triggers resource.
 type TriggersController struct {
@@ -25,17 +31,41 @@ func NewTriggersController(service *goa.Service) *TriggersController {
 func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 	// TriggersController_Webhook: start_implement
 
-	group := ctx.Group
+	rootDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	//group := ctx.Group
 	//body := readBody(ctx)
 	//headers := readHeaders(ctx)
 	tmpDir, err := ioutil.TempDir("", tmpDirPrefix)
 	if err != nil {
-		panic("Could not create temp directory. Abandoning.")
+		return err
+	}
+	copyFile(path.Join(rootDir, "exec", "js", "data.js"), path.Join(tmpDir, "data.js"))
+	copyFile(path.Join(rootDir, "exec", "js", "test.js"), path.Join(tmpDir, "test.js"))
+
+	exec.RunJS(tmpDir)
+
+	err = appFs.RemoveAll(tmpDir)
+	if err != nil {
+		fmt.Printf("Could not remove tmp dir: %s\n", tmpDir)
 	}
 
-	exec.RunJS(group, tmpDir)
-
 	// TriggersController_Webhook: end_implement
+	return nil
+}
+
+func copyFile(src string, dst string) error {
+	data, err := afero.ReadFile(appFs, src)
+	if err != nil {
+		return err
+	}
+	err = afero.WriteFile(appFs, dst, data, 0777)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
