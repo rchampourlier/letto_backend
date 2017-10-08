@@ -3,8 +3,8 @@
 #
 # This container may be run like this:
 #
-# $ docker build -t my-nodejs-app .
-# $ docker run -it --rm --name my-running-app my-nodejs-app
+# $ docker build -t letto-exec-js .
+# $ docker run -it --rm --name my-running-app letto-exec-js
 #
 # The image is defined [here](https://store.docker.com/images/node)
 # and [here on Github](https://github.com/nodejs/docker-node).
@@ -19,3 +19,4 @@
 #   -w /usr/src/app node:4 node your-daemon-or-script.js
 
 FROM node:4-onbuild
+

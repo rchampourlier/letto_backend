@@ -1,5 +1,5 @@
 var data = {
-  "test": "value"
+  "data": "value"
 };
 
 module.exports = data;

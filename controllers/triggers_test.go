@@ -3,7 +3,7 @@ package controllers_test
 /*import (
 "context"
 "testing"
-¨"github.com/goadesign/goa"
+"github.com/goadesign/goa"
 "github.com/rchampourlier/letto_go/adapters"
 "github.com/rchampourlier/letto_go/app"
 "github.com/rchampourlier/letto_go/app/test"
@@ -15,7 +15,9 @@ import (
 
 // To be tested:
 //   - body and headers are correctly extracted and passed to JS,
-//   - JS is correctly executed.
+//   - JS is correctly executed,
+//   - works with empty body,
+//   - works with JSON body.
 func TestTriggersWebhook(t *testing.T) {
 	/*var (
 		service = goa.New("letto-test")

@@ -1,8 +1,17 @@
 # History
 
+## 2017-10-08
+
+- Injecting credentials using non-committed `credentials.js`
+  file.
+- Finalied implementation of end-to-end workflow: Trello
+  webhook triggering JS workflow execution.
+
 ## 2017-10-01
 
 - Connect API's webhook endpoint with JS execution.
+- Injecting JS data and scripts into the container using
+  a tmp dir.
 
 ## 2017-09-31
 
