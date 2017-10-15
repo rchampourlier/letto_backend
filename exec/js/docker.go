@@ -71,6 +71,11 @@ func Run(cfg DockerConfig) {
 		panic(err)
 	}
 
+	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+	if err != nil {
+		panic(err)
+	}
+
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(out)
 	io.Copy(os.Stdout, out)
