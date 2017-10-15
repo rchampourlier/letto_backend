@@ -1,10 +1,21 @@
 # History
 
+## 2017-10-15
+
+- Finished implementing tracing of received webhooks.
+- Enriched received webhooks' trace (added Method, URL, Host).
+- TriggersController is now injected with a `afero.Fs` to enable
+  it injecting it in the services (`trace` and `run_workflows`).
+
+## 2017-10-09
+
+- Started implementing tracing of received webhooks.
+
 ## 2017-10-08
 
 - Injecting credentials using non-committed `credentials.js`
   file.
-- Finalied implementation of end-to-end workflow: Trello
+- Finalized implementation of end-to-end workflow: Trello
   webhook triggering JS workflow execution.
 
 ## 2017-10-01
