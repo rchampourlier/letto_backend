@@ -42,8 +42,8 @@ committed.
 
 To integrated with Trello, you will need to:
 
-1. be able to perform API calls from your workflow, so you will need API credentials,
-2. setup a webhook in Trello to call your Letto endpoint, which is done in Trello
+1. Be able to perform API calls from your workflow, so you will need API credentials.
+2. Setup a webhook in Trello to call your Letto endpoint, which is done in Trello
    through the API only.
 
 We follow the Trello documentation which you will find [here](https://trello.readme.io/v1.0/reference#introduction),
