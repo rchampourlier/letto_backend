@@ -2,10 +2,12 @@
 
 ## 2017-10-15
 
+- Wrote a more complex test workflow with Trello.
 - Finished implementing tracing of received webhooks.
-- Enriched received webhooks' trace (added Method, URL, Host).
-- TriggersController is now injected with a `afero.Fs` to enable
-  it injecting it in the services (`trace` and `run_workflows`).
+  - Enriched received webhooks' trace (added Method, URL, Host).
+  - TriggersController is now injected with a `afero.Fs` to enable
+    it injecting it in the services (`trace` and `run_workflows`).
+  - Replaced `WorkflowData` by the event structure `events.ReceivedWebhook`.
 
 ## 2017-10-09
 

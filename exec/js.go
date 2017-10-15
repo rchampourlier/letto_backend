@@ -21,7 +21,7 @@ func RunJS(dir string, main string) error {
 
 func config(dir string, main string) js.DockerConfig {
 	var cfg = js.DockerConfig{
-		Image:      "node:4",
+		Image:      "node:latest",
 		Command:    []string{"node", main},
 		Volumes:    map[string]struct{}{"/usr/src/app": {}},
 		WorkingDir: "/usr/src/app",

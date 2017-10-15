@@ -18,5 +18,5 @@
 # $ docker run -it --rm --name my-running-script -v "$PWD":/usr/src/app \
 #   -w /usr/src/app node:4 node your-daemon-or-script.js
 
-FROM node:4-onbuild
+FROM node:latest
 

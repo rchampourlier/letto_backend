@@ -30,7 +30,6 @@ type CreateWorkflowPayload struct {
 
 // CreateWorkflowPath computes a request path to the create action of workflow.
 func CreateWorkflowPath() string {
-
 	return fmt.Sprintf("/api/workflows")
 }
 

@@ -8,7 +8,6 @@ package js
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 
@@ -74,8 +73,5 @@ func Run(cfg DockerConfig) {
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(out)
-	s := buf.String()
-	fmt.Printf("---> %s\n", s)
-
 	io.Copy(os.Stdout, out)
 }
