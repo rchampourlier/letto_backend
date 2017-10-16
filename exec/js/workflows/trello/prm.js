@@ -1,7 +1,8 @@
 const data = require("./data");
 const credentials = require("./credentials");
-const context = require("./context");
-const body = context.Request.Body;
+const request = require("./request");
+const body = request.body;
+const headers = request.headers;
 const https = require('https');
 
 // Workflow
