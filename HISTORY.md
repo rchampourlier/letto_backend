@@ -3,6 +3,7 @@
 ## 2017-10-21
 
 - Completed refactoring of JS execution.
+- Implemented support for multiple workflows.
 
 ## 2017-10-15
 
