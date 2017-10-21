@@ -71,7 +71,7 @@ func Run(cfg DockerConfig) {
 		panic(err)
 	}
 
-	//err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	if err != nil {
 		panic(err)
 	}
