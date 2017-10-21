@@ -1,5 +1,9 @@
 # History
 
+## 2017-10-21
+
+- Completed refactoring of JS execution.
+
 ## 2017-10-15
 
 - Wrote a more complex test workflow with Trello.
@@ -8,6 +12,7 @@
   - TriggersController is now injected with a `afero.Fs` to enable
     it injecting it in the services (`trace` and `run_workflows`).
   - Replaced `WorkflowData` by the event structure `events.ReceivedWebhook`.
+- Started refactoring JS execution
 
 ## 2017-10-09
 

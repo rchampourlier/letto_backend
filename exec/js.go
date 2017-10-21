@@ -3,14 +3,15 @@ package exec
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/spf13/afero"
 
 	"github.com/rchampourlier/letto_go/exec/js"
+	"github.com/rchampourlier/letto_go/util"
 )
 
 var tmpDirPrefix = "letto"
@@ -28,64 +29,58 @@ func NewJsRunner(fs afero.Fs) JsRunner {
 	}
 }
 
-// Execute executes the specified script in a JS execution
-// environment. The script is passed the `body` string.
+// Execute runs the JS execution environment with the specified
+// group and context.
 //
-// `dir` is expected to be the path to a local directory
-// which contains the JS code to be executed. The container
-// will run the `main.js` file present in this directory.
+// The `group` determines which workflows are run (all workflows
+// defined by scripts under `src/workflows/<group>`) and each
+// workflow is passed the context.
 //
-// `main` is the path, local to `dir`, of the main JS file
-// to be run by the container.
-func (runner *JsRunner) Execute(credentialsPath string, group string, ctx Context) error {
-
-	// Copy the `main.js` script that will load the workflows, request
-	// and data, and run the workflows.
+// A temporary context file is created in `exec/js/src`. This file
+// provides the container with the context (e.g. request's headers,
+// body...).
+//
+// The container then mounts the `exec/js/src` directory which
+// also contains the JS source code (`main.js` and the workflows)
+// that will be executed when running the container.
+func (runner *JsRunner) Execute(group string, ctx Context) error {
 	rootDir, err := os.Getwd()
 
-	// Create a tmp dir mounted in the container to provide the scripts
-	// and data.
-	tmpDir, err := ioutil.TempDir("", tmpDirPrefix)
-	if err != nil {
-		return err
-	}
-
-	runner.copyFile(credentialsPath, path.Join(tmpDir, "credentials.js"))
-
-	// Copy the workflow scripts, selecting only the ones from
-	// the `group`.
-	// TODO: selection by group
-	runner.copyFile(path.Join(rootDir, "exec", "js", "main.js"), path.Join(tmpDir, "main.js"))
+	// `jsSrcDir` is mounted on the container
+	jsSrcDir := path.Join(rootDir, "exec", "js", "src")
 
 	// Dump the context to a file passed to the script
 	contextJS, err := generateContextJS(ctx)
 	if err != nil {
 		return err
 	}
-	err = afero.WriteFile(runner.Fs, path.Join(tmpDir, "context.js"), []byte(contextJS), 0777)
+
+	contextFileName := "context-" + util.Timestamp(time.Now()) + ".js"
+	contextJSPath := path.Join(jsSrcDir, contextFileName)
+	err = afero.WriteFile(runner.Fs, contextJSPath, []byte(contextJS), 0777)
 	if err != nil {
 		return err
 	}
-	runner.copyFile(path.Join(rootDir, "exec", "js", "data.js"), path.Join(tmpDir, "data.js"))
 
-	cfg := config(tmpDir, "./main.js")
+	cfg := config(jsSrcDir, contextFileName)
 	js.Run(cfg)
 
-	err = runner.Fs.RemoveAll(tmpDir)
+	err = runner.Fs.Remove(contextJSPath)
 	if err != nil {
-		fmt.Printf("Could not remove tmp dir: %s\n", tmpDir)
+		fmt.Printf("Could not remove context temp file: %s\n", contextJSPath)
 	}
 
 	return nil
 }
 
-func config(dir string, main string) js.DockerConfig {
+// TODO: Docker-related config should be contained in js/docker.go instead.
+func config(mountedDir string, contextFileName string) js.DockerConfig {
 	var cfg = js.DockerConfig{
 		Image:      "node:latest",
-		Command:    []string{"node", main},
+		Command:    []string{"node", "./main.js", "./" + contextFileName},
 		Volumes:    map[string]struct{}{"/usr/src/app": {}},
 		WorkingDir: "/usr/src/app",
-		Binds:      []string{dir + ":/usr/src/app"},
+		Binds:      []string{mountedDir + ":/usr/src/app"},
 	}
 	return cfg
 }
@@ -107,15 +102,3 @@ var contextJSTemplate = `
 var context = {{context}};
 module.exports = context;
 `
-
-func (runner *JsRunner) copyFile(src string, dst string) error {
-	data, err := afero.ReadFile(runner.Fs, src)
-	if err != nil {
-		return err
-	}
-	err = afero.WriteFile(runner.Fs, dst, data, 0777)
-	if err != nil {
-		return err
-	}
-	return nil
-}

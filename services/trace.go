@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"time"
 
-	strftime "github.com/jehiah/go-strftime"
 	"github.com/spf13/afero"
 
 	"github.com/rchampourlier/letto_go/events"
+	"github.com/rchampourlier/letto_go/util"
 )
 
 const tracesDirPath = "./traces"
@@ -40,8 +39,7 @@ func (s *Trace) OnReceivedWebhook(event events.ReceivedWebhook) error {
 	if err != nil {
 		return logTraceError(err)
 	}
-	timestamp := strftime.Format("%Y%m%dT%H%M%S%L%Z", time.Now())
-	timestamp = strings.Replace(timestamp, ".", "", 1)
+	timestamp := util.Timestamp(time.Now())
 	fileName := fmt.Sprintf("%s.json", timestamp)
 	filePath := path.Join(dirPath, fileName)
 

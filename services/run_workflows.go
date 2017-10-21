@@ -2,8 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"os"
-	"path"
 
 	"github.com/spf13/afero"
 
@@ -27,18 +25,13 @@ func NewRunWorkflows(fs afero.Fs) *RunWorkflows {
 //
 // TODO: refactor by extracting JS-related code to exec/js
 func (s *RunWorkflows) OnReceivedWebhook(event events.ReceivedWebhook) error {
-	rootDir, err := os.Getwd()
-	credentialsJsPath := path.Join(rootDir, "credentials.js")
-
 	ctx, err := eventToExecContext(event)
 	if err != nil {
 		return err
 	}
 
-	// TODO: credentials should be passed as a Go object, so as to
-	//   be execution-environment agnostic.
 	runner := exec.NewJsRunner(s.Fs)
-	err = runner.Execute(credentialsJsPath, event.Group, ctx)
+	err = runner.Execute(event.Group, ctx)
 	if err != nil {
 		return err
 	}

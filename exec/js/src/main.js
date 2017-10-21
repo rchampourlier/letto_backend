@@ -1,6 +1,6 @@
 const data = require("./data");
-const credentials = require("./credentials");
-const context = require("./context");
+const secrets = require("./secrets");
+const context = require(process.argv[2]);
 const body = context.Request.Body;
 const https = require('https');
 
@@ -37,8 +37,8 @@ const https = require('https');
 //
 
 function trelloAPICall(verb, path, queryString, onSuccess, onError) {
-  path += '?key=' + credentials.trello.api_key;
-  path += '&token=' + credentials.trello.api_token;
+  path += '?key=' + secrets.trello.api_key;
+  path += '&token=' + secrets.trello.api_token;
   if (queryString.length > 0) {
     path += '&' + queryString;
   }
