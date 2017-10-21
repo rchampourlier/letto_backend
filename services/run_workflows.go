@@ -59,6 +59,7 @@ func eventToExecContext(event events.ReceivedWebhook) (exec.Context, error) {
 	ctx = exec.Context{
 		Trigger: exec.Webhook,
 		Request: req,
+		Group:   event.Group,
 	}
 	return ctx, nil
 }

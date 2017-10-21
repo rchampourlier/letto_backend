@@ -20,6 +20,7 @@ const (
 type Context struct {
 	Trigger TriggerType
 	Request WebhookRequest
+	Group   string
 }
 
 // WebhookRequest represents the data of a webhook request.
