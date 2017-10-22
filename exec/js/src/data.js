@@ -1,5 +1,2 @@
-var data = {
-  "data": "value"
+module.exports = {
 };
-
-module.exports = data;
