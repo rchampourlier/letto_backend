@@ -1,5 +1,12 @@
 # History
 
+## 2017-10-22
+
+- Tracing standard and error logs from JS execution, writing them to `traces/...`
+  files. Injecting customized `Console` in JS scripts to prefix the logs with
+  a timestamp and the context, enabling differentiating logs from different
+  workflows.
+
 ## 2017-10-21
 
 - Completed refactoring of JS execution.

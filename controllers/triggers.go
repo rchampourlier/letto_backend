@@ -2,13 +2,16 @@ package controllers
 
 import (
 	"bytes"
+	"time"
 
 	"github.com/goadesign/goa"
+	"github.com/satori/go.uuid"
 	"github.com/spf13/afero"
 
 	"github.com/rchampourlier/letto_go/app"
 	"github.com/rchampourlier/letto_go/events"
 	"github.com/rchampourlier/letto_go/services"
+	"github.com/rchampourlier/letto_go/util"
 )
 
 // TriggersController implements the triggers resource.
@@ -30,18 +33,25 @@ func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 	// TriggersController_Webhook: start_implement
 
 	event := events.ReceivedWebhook{
-		Method:  ctx.Method,
-		URL:     ctx.URL,
-		Host:    ctx.Host,
-		Body:    readBody(ctx),
-		Headers: readHeaders(ctx),
-		Group:   ctx.Group,
+		UniqueID: uniqueID(),
+		Method:   ctx.Method,
+		URL:      ctx.URL,
+		Host:     ctx.Host,
+		Body:     readBody(ctx),
+		Headers:  readHeaders(ctx),
+		Group:    ctx.Group,
 	}
 	services.NewTrace(c.fs).OnReceivedWebhook(event)
 	services.NewRunWorkflows(c.fs).OnReceivedWebhook(event)
 
 	// TriggersController_Webhook: end_implement
 	return nil
+}
+
+func uniqueID() string {
+	timestamp := util.Timestamp(time.Now())
+	uuid := uuid.NewV4()
+	return timestamp + "-" + uuid.String()
 }
 
 func readBody(ctx *app.WebhookTriggersContext) string {

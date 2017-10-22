@@ -7,6 +7,7 @@ import (
 
 	"github.com/rchampourlier/letto_go/events"
 	"github.com/rchampourlier/letto_go/exec"
+	"github.com/rchampourlier/letto_go/exec/values"
 )
 
 // RunWorkflows stores the service's config.
@@ -31,16 +32,24 @@ func (s *RunWorkflows) OnReceivedWebhook(event events.ReceivedWebhook) error {
 	}
 
 	runner := exec.NewJsRunner(s.Fs)
-	err = runner.Execute(event.Group, ctx)
-	if err != nil {
-		return err
+	output, err := runner.Execute(event.Group, ctx)
+
+	newEvent := events.CompletedWorkflows{
+		TriggerUniqueID: event.UniqueID,
+		Group:           event.Group,
+		Stdout:          output.Stdout,
+		Stderr:          output.Stderr,
 	}
+	if err != nil {
+		newEvent.Error = err.Error()
+	}
+	NewTrace(s.Fs).OnCompletedWorkflows(newEvent)
 
 	return nil
 }
 
-func eventToExecContext(event events.ReceivedWebhook) (exec.Context, error) {
-	var ctx = exec.Context{}
+func eventToExecContext(event events.ReceivedWebhook) (values.Context, error) {
+	var ctx = values.Context{}
 
 	// TODO: determine the type of content using the headers.ContentType
 	//   and select the appropriate parser.
@@ -49,15 +58,15 @@ func eventToExecContext(event events.ReceivedWebhook) (exec.Context, error) {
 		return ctx, err
 	}
 
-	req := exec.WebhookRequest{
+	req := values.WebhookRequest{
 		Method:  event.Method,
 		URL:     event.URL,
 		Host:    event.Host,
 		Body:    parsedBody,
 		Headers: event.Headers,
 	}
-	ctx = exec.Context{
-		Trigger: exec.Webhook,
+	ctx = values.Context{
+		Trigger: values.Webhook,
 		Request: req,
 		Group:   event.Group,
 	}

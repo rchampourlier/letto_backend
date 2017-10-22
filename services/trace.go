@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	"github.com/spf13/afero"
 
 	"github.com/rchampourlier/letto_go/events"
-	"github.com/rchampourlier/letto_go/util"
 )
 
 const tracesDirPath = "./traces"
@@ -39,8 +37,7 @@ func (s *Trace) OnReceivedWebhook(event events.ReceivedWebhook) error {
 	if err != nil {
 		return logTraceError(err)
 	}
-	timestamp := util.Timestamp(time.Now())
-	fileName := fmt.Sprintf("%s.json", timestamp)
+	fileName := fmt.Sprintf("%s-trigger.json", event.UniqueID)
 	filePath := path.Join(dirPath, fileName)
 
 	// Write the content of the event to a file
@@ -56,7 +53,46 @@ func (s *Trace) OnReceivedWebhook(event events.ReceivedWebhook) error {
 	return nil
 }
 
+// OnCompletedWorkflows writes a trace of the workflows execution, using
+// provided `events.CompletedWorkflows` data.
+func (s *Trace) OnCompletedWorkflows(event events.CompletedWorkflows) error {
+	rootDir, err := os.Getwd()
+	if err != nil {
+		return logTraceError(err)
+	}
+	dirPath := path.Join(rootDir, tracesDirPath, event.Group)
+	err = s.Fs.MkdirAll(dirPath, 0777)
+	if err != nil {
+		return logTraceError(err)
+	}
+	fileName := fmt.Sprintf("%s-logs.json", event.TriggerUniqueID)
+	filePath := path.Join(dirPath, fileName)
+
+	// Write the logs to a file
+	logs := logsTrace{
+		Stdout: event.Stdout,
+		Stderr: event.Stderr,
+		error:  event.Error,
+	}
+	logsAsJSON, err := json.Marshal(logs)
+	if err != nil {
+		return logTraceError(err)
+	}
+	err = afero.WriteFile(s.Fs, filePath, logsAsJSON, 0777)
+	if err != nil {
+		return logTraceError(err)
+	}
+
+	return nil
+}
+
 func logTraceError(err error) error {
-	fmt.Printf("Failed to write event file (%s)\n", err)
+	fmt.Printf("Failed to write file (%s)\n", err)
 	return err
+}
+
+type logsTrace struct {
+	Stdout string
+	Stderr string
+	error  string
 }

@@ -8,13 +8,14 @@ package js
 
 import (
 	"bytes"
-	"io"
-	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"golang.org/x/net/context"
+
+	"github.com/rchampourlier/letto_go/exec/values"
 )
 
 // DockerConfig defines the config of the Docker container
@@ -29,16 +30,17 @@ type DockerConfig struct {
 
 // Run executes a Docker container with the specified
 // parameters.
-func Run(cfg DockerConfig) {
+func Run(cfg DockerConfig) (values.Output, error) {
+	output := values.Output{}
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
-		panic(err)
+		return output, err
 	}
 
 	_, err = cli.ImagePull(ctx, cfg.Image, types.ImagePullOptions{})
 	if err != nil {
-		panic(err)
+		return output, err
 	}
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
@@ -50,33 +52,45 @@ func Run(cfg DockerConfig) {
 		Binds: cfg.Binds,
 	}, nil, "")
 	if err != nil {
-		panic(err)
+		return output, err
 	}
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
+		return output, err
 	}
 
 	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
-			panic(err)
+			return output, err
 		}
 	case <-statusCh:
 	}
 
-	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+	logs, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Timestamps: false,
+		Follow:     false,
+		Details:    false,
+	})
 	if err != nil {
-		panic(err)
+		return output, err
 	}
+
+	// As explained in github.com/moby/moby/client/container_logs.go
+	// we use `stdcopy.Stdcopy` to demulitplex the logs.
+	bufOut := new(bytes.Buffer)
+	bufErr := new(bytes.Buffer)
+	stdcopy.StdCopy(bufOut, bufErr, logs)
+	output.Stdout = bufOut.String()
+	output.Stderr = bufErr.String()
 
 	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	if err != nil {
-		panic(err)
+		return output, err
 	}
 
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(out)
-	io.Copy(os.Stdout, out)
+	return output, nil
 }

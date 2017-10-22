@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/rchampourlier/letto_go/exec/js"
+	"github.com/rchampourlier/letto_go/exec/values"
 	"github.com/rchampourlier/letto_go/util"
 )
 
@@ -43,8 +44,9 @@ func NewJsRunner(fs afero.Fs) JsRunner {
 // The container then mounts the `exec/js/src` directory which
 // also contains the JS source code (`main.js` and the workflows)
 // that will be executed when running the container.
-func (runner *JsRunner) Execute(group string, ctx Context) error {
+func (runner *JsRunner) Execute(group string, ctx values.Context) (values.Output, error) {
 	rootDir, err := os.Getwd()
+	output := values.Output{}
 
 	// `jsSrcDir` is mounted on the container
 	jsSrcDir := path.Join(rootDir, "exec", "js", "src")
@@ -52,25 +54,28 @@ func (runner *JsRunner) Execute(group string, ctx Context) error {
 	// Dump the context to a file passed to the script
 	contextJS, err := generateContextJS(ctx)
 	if err != nil {
-		return err
+		return output, err
 	}
 
 	contextFileName := "context-" + util.Timestamp(time.Now()) + ".js"
 	contextJSPath := path.Join(jsSrcDir, contextFileName)
 	err = afero.WriteFile(runner.Fs, contextJSPath, []byte(contextJS), 0777)
 	if err != nil {
-		return err
+		return output, err
 	}
 
 	cfg := config(jsSrcDir, contextFileName)
-	js.Run(cfg)
+	output, err = js.Run(cfg)
+	if err != nil {
+		fmt.Printf("Error while running JS workflows: %s\n", err)
+	}
 
 	err = runner.Fs.Remove(contextJSPath)
 	if err != nil {
 		fmt.Printf("Could not remove context temp file: %s\n", contextJSPath)
 	}
 
-	return nil
+	return output, nil
 }
 
 // TODO: Docker-related config should be contained in js/docker.go instead.
@@ -87,7 +92,7 @@ func config(mountedDir string, contextFileName string) js.DockerConfig {
 
 // contextJS generates JS script to provide the context to
 // the JS scripts.
-func generateContextJS(ctx Context) (string, error) {
+func generateContextJS(ctx values.Context) (string, error) {
 	contextDataJS, err := json.Marshal(ctx)
 	if err != nil {
 		return "", err

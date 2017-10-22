@@ -1,5 +1,3 @@
-const https = require('https');
-
 // Workflow
 // 
 // ### Trigger:
@@ -23,51 +21,53 @@ const https = require('https');
 //   - "active contact": 30 days
 //   - "passive contact": 90 days
 
-// Trigger:
-//   - commented: "commentCard"
-//   - added label: "addLabelToCard"
-//   - removed label: "removeLabelFromCard"
-//
-// Action types are documented here:
-//   [Trello reference](https://developers.trello.com/v1.0/reference#action-types)
-//
+module.exports = (data, secrets, context, console) => {
 
-function trelloAPICall(key, token, verb, path, queryString, onSuccess, onError) {
-  path += '?key=' + key;
-  path += '&token=' + token;
-  if (queryString.length > 0) {
-    path += '&' + queryString;
-  }
+  trelloAPICall = (key, token, verb, path, queryString, onSuccess, onError) => {
+    path += '?key=' + key;
+    path += '&token=' + token;
+    if (queryString.length > 0) {
+      path += '&' + queryString;
+    }
 
-  const options = {
-    hostname: 'api.trello.com',
-    port: 443,
-    path: path,
-    method: verb
+    const options = {
+      hostname: 'api.trello.com',
+      port: 443,
+      path: path,
+      method: verb
+    };
+
+    const req = https.request(options, (res) => {
+      var dataStr = '';
+      res.on('data', (chunk) => {
+        dataStr += chunk;
+      });
+
+      res.on('end', function () {
+        onSuccess(dataStr);
+      });
+    });
+
+    req.on('error', (e) => {
+      onError(e);
+    });
+
+    req.end();
   };
 
-  const req = https.request(options, (res) => {
-    var dataStr = '';
-    res.on('data', (chunk) => {
-      dataStr += chunk;
-    });
-
-    res.on('end', function () {
-      onSuccess(dataStr);
-    });
-  });
-
-  req.on('error', (e) => {
-    onError(e);
-  });
-
-  req.end();
-}
-
-module.exports = (data, secrets, context) => {
+  // Main workflow code
+  const https = require('https');
   const body = context.Request.Body;
-
   var actionType = body.action.type;
+
+  // Trigger:
+  //   - commented: "commentCard"
+  //   - added label: "addLabelToCard"
+  //   - removed label: "removeLabelFromCard"
+  //
+  // Action types are documented here:
+  //   [Trello reference](https://developers.trello.com/v1.0/reference#action-types)
+  //
   if (actionType == 'commentCard' ||
       actionType == 'addLabelToCard' ||
       actionType == 'removeLabelFromCard') {
@@ -110,5 +110,5 @@ module.exports = (data, secrets, context) => {
     (error) => { // error callback
       console.error("Could not fetch the card (" + error + ")");
     });
-  }
+  };
 };
