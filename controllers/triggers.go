@@ -10,6 +10,7 @@ import (
 
 	"github.com/rchampourlier/letto_go/app"
 	"github.com/rchampourlier/letto_go/events"
+	"github.com/rchampourlier/letto_go/exec"
 	"github.com/rchampourlier/letto_go/services"
 	"github.com/rchampourlier/letto_go/util"
 )
@@ -17,14 +18,16 @@ import (
 // TriggersController implements the triggers resource.
 type TriggersController struct {
 	*goa.Controller
-	fs afero.Fs
+	fs       afero.Fs
+	jsRunner exec.JsRunner
 }
 
 // NewTriggersController creates a triggers controller.
-func NewTriggersController(service *goa.Service, fs afero.Fs) *TriggersController {
+func NewTriggersController(service *goa.Service, fs afero.Fs, jsRunner exec.JsRunner) *TriggersController {
 	return &TriggersController{
 		Controller: service.NewController("TriggersController"),
 		fs:         fs,
+		jsRunner:   jsRunner,
 	}
 }
 

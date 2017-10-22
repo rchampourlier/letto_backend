@@ -6,6 +6,8 @@
   files. Injecting customized `Console` in JS scripts to prefix the logs with
   a timestamp and the context, enabling differentiating logs from different
   workflows.
+- Added support custom container images. The image is built when starting the
+  main program, using the `Dockerfile` in the `exec/js/docker` directory.
 
 ## 2017-10-21
 

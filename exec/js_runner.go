@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/rchampourlier/letto_go/exec/js"
+	"github.com/rchampourlier/letto_go/exec/js/docker"
 	"github.com/rchampourlier/letto_go/exec/values"
 	"github.com/rchampourlier/letto_go/util"
 )
@@ -28,6 +28,13 @@ func NewJsRunner(fs afero.Fs) JsRunner {
 	return JsRunner{
 		Fs: fs,
 	}
+}
+
+// Prepare prepares the JS execution environment with the
+// specified root dir.
+func (runner *JsRunner) Prepare(rootDir string) error {
+	err := docker.Prepare(rootDir, os.Stdout)
+	return err
 }
 
 // Execute runs the JS execution environment with the specified
@@ -64,8 +71,7 @@ func (runner *JsRunner) Execute(group string, ctx values.Context) (values.Output
 		return output, err
 	}
 
-	cfg := config(jsSrcDir, contextFileName)
-	output, err = js.Run(cfg)
+	output, err = docker.Run(jsSrcDir, contextFileName)
 	if err != nil {
 		fmt.Printf("Error while running JS workflows: %s\n", err)
 	}
@@ -76,18 +82,6 @@ func (runner *JsRunner) Execute(group string, ctx values.Context) (values.Output
 	}
 
 	return output, nil
-}
-
-// TODO: Docker-related config should be contained in js/docker.go instead.
-func config(mountedDir string, contextFileName string) js.DockerConfig {
-	var cfg = js.DockerConfig{
-		Image:      "node:latest",
-		Command:    []string{"node", "./main.js", "./" + contextFileName},
-		Volumes:    map[string]struct{}{"/usr/src/app": {}},
-		WorkingDir: "/usr/src/app",
-		Binds:      []string{mountedDir + ":/usr/src/app"},
-	}
-	return cfg
 }
 
 // contextJS generates JS script to provide the context to
