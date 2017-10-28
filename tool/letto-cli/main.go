@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	goaclient "github.com/goadesign/goa/client"
-	"github.com/rchampourlier/letto_go/client"
-	"github.com/rchampourlier/letto_go/tool/cli"
+	"github.com/rchampourlier/letto_backend/client"
+	"github.com/rchampourlier/letto_backend/tool/cli"
 	"github.com/spf13/cobra"
 	"net/http"
 	"os"

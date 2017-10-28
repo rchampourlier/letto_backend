@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/goadesign/goa"
-	"github.com/rchampourlier/letto_go/adapters"
-	"github.com/rchampourlier/letto_go/app"
-	"github.com/rchampourlier/letto_go/util"
+	"github.com/rchampourlier/letto_backend/adapters"
+	"github.com/rchampourlier/letto_backend/app"
+	"github.com/rchampourlier/letto_backend/util"
 )
 
 // WorkflowController implements the workflow resource.

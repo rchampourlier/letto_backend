@@ -4,8 +4,8 @@
 //
 // Command:
 // $ goagen
-// --design=github.com/rchampourlier/letto_go/design
-// --out=$(GOPATH)/src/github.com/rchampourlier/letto_go
+// --design=github.com/rchampourlier/letto_backend/design
+// --out=$(GOPATH)/src/github.com/rchampourlier/letto_backend
 // --version=v1.3.0
 
 package test
@@ -16,7 +16,7 @@ import (
 	"fmt"
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/goatest"
-	"github.com/rchampourlier/letto_go/app"
+	"github.com/rchampourlier/letto_backend/app"
 	"io"
 	"log"
 	"net/http"

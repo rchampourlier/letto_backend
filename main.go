@@ -1,4 +1,4 @@
-//go:generate goagen bootstrap -d github.com/rchampourlier/letto_go/design
+//go:generate goagen bootstrap -d github.com/rchampourlier/letto_backend/design
 
 package main
 
@@ -10,10 +10,10 @@ import (
 	"github.com/goadesign/goa/middleware"
 	"github.com/spf13/afero"
 
-	//"github.com/rchampourlier/letto_go/adapters"
-	"github.com/rchampourlier/letto_go/app"
-	"github.com/rchampourlier/letto_go/controllers"
-	"github.com/rchampourlier/letto_go/exec"
+	//"github.com/rchampourlier/letto_backend/adapters"
+	"github.com/rchampourlier/letto_backend/app"
+	"github.com/rchampourlier/letto_backend/controllers"
+	"github.com/rchampourlier/letto_backend/exec"
 )
 
 func main() {

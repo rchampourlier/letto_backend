@@ -4,10 +4,10 @@ package controllers_test
 "context"
 "testing"
 "github.com/goadesign/goa"
-"github.com/rchampourlier/letto_go/adapters"
-"github.com/rchampourlier/letto_go/app"
-"github.com/rchampourlier/letto_go/app/test"
-"github.com/rchampourlier/letto_go/controllers")*/
+"github.com/rchampourlier/letto_backend/adapters"
+"github.com/rchampourlier/letto_backend/app"
+"github.com/rchampourlier/letto_backend/app/test"
+"github.com/rchampourlier/letto_backend/controllers")*/
 
 import (
 	"testing"

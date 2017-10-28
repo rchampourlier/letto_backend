@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/rchampourlier/letto_go/exec/js/docker"
-	"github.com/rchampourlier/letto_go/exec/values"
-	"github.com/rchampourlier/letto_go/util"
+	"github.com/rchampourlier/letto_backend/exec/js/docker"
+	"github.com/rchampourlier/letto_backend/exec/values"
+	"github.com/rchampourlier/letto_backend/util"
 )
 
 var tmpDirPrefix = "letto"
