@@ -4,8 +4,8 @@
 //
 // Command:
 // $ goagen
-// --design=github.com/rchampourlier/letto_backend/design
-// --out=$(GOPATH)/src/github.com/rchampourlier/letto_backend
+// --design=gitlab.com/letto/letto_backend/design
+// --out=$(GOPATH)/src/gitlab.com/letto/letto_backend
 // --version=v1.3.0
 
 package app

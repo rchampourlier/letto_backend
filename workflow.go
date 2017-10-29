@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/goadesign/goa"
-	"github.com/rchampourlier/letto_backend/app"
+	"gitlab.com/letto/letto_backend/app"
 )
 
 // WorkflowController implements the workflow resource.

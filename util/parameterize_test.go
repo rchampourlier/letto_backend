@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rchampourlier/letto_backend/util"
+	"gitlab.com/letto/letto_backend/util"
 )
 
 type ParameterizeTest struct {

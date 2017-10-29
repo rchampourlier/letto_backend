@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/goadesign/goa"
-	"github.com/rchampourlier/letto_backend/adapters"
-	"github.com/rchampourlier/letto_backend/app"
-	"github.com/rchampourlier/letto_backend/app/test"
-	"github.com/rchampourlier/letto_backend/controllers"
+	"gitlab.com/letto/letto_backend/adapters"
+	"gitlab.com/letto/letto_backend/app"
+	"gitlab.com/letto/letto_backend/app/test"
+	"gitlab.com/letto/letto_backend/controllers"
 )
 
 // Test cases:

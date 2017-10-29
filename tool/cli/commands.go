@@ -4,8 +4,8 @@
 //
 // Command:
 // $ goagen
-// --design=github.com/rchampourlier/letto_backend/design
-// --out=$(GOPATH)/src/github.com/rchampourlier/letto_backend
+// --design=gitlab.com/letto/letto_backend/design
+// --out=$(GOPATH)/src/gitlab.com/letto/letto_backend
 // --version=v1.3.0
 
 package cli
@@ -17,7 +17,7 @@ import (
 	"github.com/goadesign/goa"
 	goaclient "github.com/goadesign/goa/client"
 	uuid "github.com/goadesign/goa/uuid"
-	"github.com/rchampourlier/letto_backend/client"
+	"gitlab.com/letto/letto_backend/client"
 	"github.com/spf13/cobra"
 	"log"
 	"net/url"

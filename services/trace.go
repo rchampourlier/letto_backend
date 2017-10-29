@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/rchampourlier/letto_backend/events"
+	"gitlab.com/letto/letto_backend/events"
 )
 
 const tracesDirPath = "./traces"

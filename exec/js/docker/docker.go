@@ -18,7 +18,7 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"golang.org/x/net/context"
 
-	"github.com/rchampourlier/letto_backend/exec/values"
+	"gitlab.com/letto/letto_backend/exec/values"
 )
 
 const imageNameAndTag = "letto/exec-js:latest"

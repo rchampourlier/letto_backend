@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rchampourlier/letto_backend/util"
+	"gitlab.com/letto/letto_backend/util"
 )
 
 func TestTimestamp(t *testing.T) {

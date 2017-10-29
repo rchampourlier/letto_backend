@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/rchampourlier/letto_backend/events"
-	"github.com/rchampourlier/letto_backend/exec"
-	"github.com/rchampourlier/letto_backend/exec/values"
+	"gitlab.com/letto/letto_backend/events"
+	"gitlab.com/letto/letto_backend/exec"
+	"gitlab.com/letto/letto_backend/exec/values"
 )
 
 // RunWorkflows stores the service's config.

@@ -8,11 +8,11 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/spf13/afero"
 
-	"github.com/rchampourlier/letto_backend/app"
-	"github.com/rchampourlier/letto_backend/events"
-	"github.com/rchampourlier/letto_backend/exec"
-	"github.com/rchampourlier/letto_backend/services"
-	"github.com/rchampourlier/letto_backend/util"
+	"gitlab.com/letto/letto_backend/app"
+	"gitlab.com/letto/letto_backend/events"
+	"gitlab.com/letto/letto_backend/exec"
+	"gitlab.com/letto/letto_backend/services"
+	"gitlab.com/letto/letto_backend/util"
 )
 
 // TriggersController implements the triggers resource.
