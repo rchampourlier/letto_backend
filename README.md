@@ -73,3 +73,45 @@ to their [Reference documentation](https://trello.readme.io/reference#membersidb
 You can use this to setup your webhooks on Letto's endpoint.
 
 NB: Letto's endpoint is: `http[s]://YOUR-DOMAIN:YOUR-PORT/api/triggers/webhook[/YOUR-GROUP]`
+
+## Deployment
+
+### Prerequisites
+
+**docker-compose**
+
+Install with: 
+
+    sudo curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+
+### Run withing Docker
+
+Build the image:
+
+    docker build -t letto-backend .
+
+Run the container, exposing the Docker socket to enable the application
+to create sibling containers:
+
+    docker run -v /var/run/docker.sock:/var/run/docker.sock -it --rm --name letto-backend letto-backend:latest
+
+#### Debug
+
+```
+docker run -it --rm --name letto_exec_js_shell -v "$PWD/../src":/usr/src/app -w /usr/src/app letto_exec_js:latest node 
+```
+
+### Access private repository in CI/CD
+
+This may help to build the Docker image:
+
+```
+# This part enables `go get` to fetch a private repository on gitlab,
+# assuming the deploy_key present in the directory is authorized
+# for this repo.
+RUN mkdir ~/.ssh
+RUN mv deploy_key ~/.ssh/id_rsa
+RUN mv deploy_key.pub ~/.ssh/id_rsa.pub
+RUN echo "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+```

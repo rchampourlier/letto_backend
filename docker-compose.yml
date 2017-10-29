@@ -1,0 +1,9 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+    - "9292:9292"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../letto_traces:/tmp/traces

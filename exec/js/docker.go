@@ -4,13 +4,14 @@
 // be used to simply execute a Docker container
 // with a reduced set of parameters.
 
-package docker
+package js
 
 import (
 	"archive/tar"
 	"bytes"
 	"io"
 	"os"
+	"path"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -21,7 +22,7 @@ import (
 	"gitlab.com/letto/letto_backend/exec/values"
 )
 
-const imageNameAndTag = "letto/exec-js:latest"
+const imageNameAndTag = "lettobackend_web_execjs:latest"
 
 // Prepare prepares the Docker environment. In particular, it builds
 // the container image.
@@ -61,9 +62,16 @@ func Prepare(rootDir string, out io.Writer) error {
 
 // Run executes a Docker container with the specified
 // parameters.
-func Run(srcDir string, contextFileName string) (values.Output, error) {
-
+func Run(contextFileName string) (values.Output, error) {
 	output := values.Output{}
+
+	// TODO: should be injected with the location of the
+	// `exec/js` directory.
+	cwd, err := os.Getwd()
+	if err != nil {
+		return output, err
+	}
+
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
@@ -71,7 +79,8 @@ func Run(srcDir string, contextFileName string) (values.Output, error) {
 	}
 
 	// The image is created locally so we don't need to pull
-	// it anymore.
+	// it anymore. NB: voluntarily keeping this here in case
+	// it changes, will make it easier to restore.
 	/*_, err = cli.ImagePull(ctx, imageNameAndTag, types.ImagePullOptions{})
 	if err != nil {
 		return output, err
@@ -83,7 +92,7 @@ func Run(srcDir string, contextFileName string) (values.Output, error) {
 		Volumes:    map[string]struct{}{"/usr/src/app": {}},
 		WorkingDir: "/usr/src/app",
 	}, &container.HostConfig{
-		Binds: []string{srcDir + ":/usr/src/app"},
+		Binds: []string{path.Join(cwd, "exec", "js", "src") + ":/usr/src/app"},
 	}, nil, "")
 	if err != nil {
 		return output, err

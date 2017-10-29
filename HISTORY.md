@@ -1,5 +1,13 @@
 # History
 
+## 2017-10-29
+
+- Making changes to enable it running inside a Docker container and spawning
+  sibling containers.
+- Currently failing when ran from Docker, probably because the `cwd` used
+  to determine the bind is now inside the container and not corresponding
+  to the host's path.
+
 ## 2017-10-22
 
 - Tracing standard and error logs from JS execution, writing them to `traces/...`

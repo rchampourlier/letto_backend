@@ -11,8 +11,6 @@ import (
 	"gitlab.com/letto/letto_backend/events"
 )
 
-const tracesDirPath = "./traces"
-
 // Trace stores the service's config.
 type Trace struct {
 	Fs afero.Fs
@@ -28,12 +26,8 @@ func NewTrace(fs afero.Fs) *Trace {
 // for future reuse (e.g. to try a new version of a workflow or
 // inspect the payload).
 func (s *Trace) OnReceivedWebhook(event events.ReceivedWebhook) error {
-	rootDir, err := os.Getwd()
-	if err != nil {
-		return logTraceError(err)
-	}
-	dirPath := path.Join(rootDir, tracesDirPath, event.Group)
-	err = s.Fs.MkdirAll(dirPath, 0777)
+	dirPath := path.Join(tracesDir(), event.Group)
+	err := s.Fs.MkdirAll(dirPath, 0777)
 	if err != nil {
 		return logTraceError(err)
 	}
@@ -56,12 +50,8 @@ func (s *Trace) OnReceivedWebhook(event events.ReceivedWebhook) error {
 // OnCompletedWorkflows writes a trace of the workflows execution, using
 // provided `events.CompletedWorkflows` data.
 func (s *Trace) OnCompletedWorkflows(event events.CompletedWorkflows) error {
-	rootDir, err := os.Getwd()
-	if err != nil {
-		return logTraceError(err)
-	}
-	dirPath := path.Join(rootDir, tracesDirPath, event.Group)
-	err = s.Fs.MkdirAll(dirPath, 0777)
+	dirPath := path.Join(tracesDir(), event.Group)
+	err := s.Fs.MkdirAll(dirPath, 0777)
 	if err != nil {
 		return logTraceError(err)
 	}
@@ -95,4 +85,8 @@ type logsTrace struct {
 	Stdout string
 	Stderr string
 	error  string
+}
+
+func tracesDir() string {
+	return path.Join(os.TempDir(), "traces")
 }

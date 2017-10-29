@@ -5,12 +5,12 @@ package main
 import (
 	"log"
 	"os"
+	"path"
 
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
 	"github.com/spf13/afero"
 
-	//"gitlab.com/letto/letto_backend/adapters"
 	"gitlab.com/letto/letto_backend/app"
 	"gitlab.com/letto/letto_backend/controllers"
 	"gitlab.com/letto/letto_backend/exec"
@@ -26,10 +26,12 @@ func main() {
 	fs := afero.NewOsFs()
 
 	// Prepare execution environments
-	jsRunner := exec.NewJsRunner(fs)
-	if err := jsRunner.Prepare(cwd); err != nil {
+	err = exec.PrepareJsRunner(path.Join(cwd, "exec", "js"))
+	if err != nil {
+		// The JsRunner failed during preparation
 		log.Panicf("%s\n", err)
 	}
+	jsRunner := exec.NewJsRunner(fs)
 
 	// Create service
 	service := goa.New("letto")
