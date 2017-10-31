@@ -3,35 +3,44 @@
 package main
 
 import (
-	"log"
-	"os"
-	"path"
-
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
 	"github.com/spf13/afero"
 
 	"gitlab.com/letto/letto_backend/app"
 	"gitlab.com/letto/letto_backend/controllers"
-	"gitlab.com/letto/letto_backend/exec"
+	"gitlab.com/letto/letto_backend/exec/js"
 )
 
 func main() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Panicf("%s\n", err)
-	}
-
 	// Local filesystem Afero wrapper
 	fs := afero.NewOsFs()
 
+	// TODO: make the following variables a configuration. These
+	//   3 variables depend on the `docker-compose` config.
+	// NB: if you need to run the Go app outside of Docker, you'll
+	//     have to change the variables below.
+
+	// `hostDataDir` defines where the `data` directory is contained
+	// on the host.
+	hostDataDir := "/home/ubuntu/letto_data"
+
+	// `appDataDir` indicates where the `data` directory will be
+	// for the Go app.
+	appDataDir := "/tmp/data"
+
+	// TODO: make the traces dir configurable in `Trace`
+	//appTracesDir := "/tmp/traces"
+
+	// `execDataDir` specified where the `data` directory will be
+	// in the context of the execution container.
+	execDataDir := "/usr/src/app/data"
+
 	// Prepare execution environments
-	err = exec.PrepareJsRunner(path.Join(cwd, "exec", "js"))
+	jsRunner, err := js.NewRunner(fs, hostDataDir, appDataDir, execDataDir)
 	if err != nil {
-		// The JsRunner failed during preparation
-		log.Panicf("%s\n", err)
+		panic(err)
 	}
-	jsRunner := exec.NewJsRunner(fs)
 
 	// Create service
 	service := goa.New("letto")
@@ -51,5 +60,4 @@ func main() {
 	if err := service.ListenAndServe(":9292"); err != nil {
 		service.LogError("startup", "err", err)
 	}
-
 }

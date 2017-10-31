@@ -34,13 +34,13 @@ const workflowConsole = (group, workflow) => {
 mainLog = (message) => { console.log(timestamp() + " [Exec/JS] " + message); };
 
 // Loading the environment
-const data = require("./data");
-const secrets = require("./secrets");
-const context = require(process.argv[2]);
+const data = require("./data/data");
+const secrets = require("./data/secrets");
+const context = require("./data/" + process.argv[2]);
 const group = context.Group;
 
 // Directory containing the workflows to be executed
-const rootDir = "./workflows/";
+const rootDir = "./data/workflows/";
 const dir = rootDir + group + "/";
 mainLog("Starting workflows in group `" + group + "`");
 
@@ -61,5 +61,4 @@ fs.readdir(dir, (err, files) => {
     workflowFunc(data, secrets, context, workflowConsole(group, workflow));
     mainLog("Completed workflow `" + workflow + "`");
   }
-
 });

@@ -87,19 +87,17 @@ Install with:
 
 ### Run withing Docker
 
-Build the image:
+    docker-compose build
+    docker-compose up web
 
-    docker build -t letto-backend .
-
-Run the container, exposing the Docker socket to enable the application
-to create sibling containers:
+To run the container manually:
 
     docker run -v /var/run/docker.sock:/var/run/docker.sock -it --rm --name letto-backend letto-backend:latest
 
 #### Debug
 
 ```
-docker run -it --rm --name letto_exec_js_shell -v "$PWD/../src":/usr/src/app -w /usr/src/app letto_exec_js:latest node 
+docker run -it --rm -v "$PWD/../data":/tmp/data -v "$PWD/../traces":/tmp/traces -w /usr/src/app lettobackend_execjs:latest node 
 ```
 
 ### Access private repository in CI/CD

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/goadesign/goa"
@@ -10,7 +11,7 @@ import (
 
 	"gitlab.com/letto/letto_backend/app"
 	"gitlab.com/letto/letto_backend/events"
-	"gitlab.com/letto/letto_backend/exec"
+	"gitlab.com/letto/letto_backend/exec/js"
 	"gitlab.com/letto/letto_backend/services"
 	"gitlab.com/letto/letto_backend/util"
 )
@@ -19,11 +20,11 @@ import (
 type TriggersController struct {
 	*goa.Controller
 	fs       afero.Fs
-	jsRunner exec.JsRunner
+	jsRunner js.Runner
 }
 
 // NewTriggersController creates a triggers controller.
-func NewTriggersController(service *goa.Service, fs afero.Fs, jsRunner exec.JsRunner) *TriggersController {
+func NewTriggersController(service *goa.Service, fs afero.Fs, jsRunner js.Runner) *TriggersController {
 	return &TriggersController{
 		Controller: service.NewController("TriggersController"),
 		fs:         fs,
@@ -34,6 +35,7 @@ func NewTriggersController(service *goa.Service, fs afero.Fs, jsRunner exec.JsRu
 // Webhook runs the webhook action.
 func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 	// TriggersController_Webhook: start_implement
+	var err error
 
 	event := events.ReceivedWebhook{
 		UniqueID: uniqueID(),
@@ -44,11 +46,21 @@ func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 		Headers:  readHeaders(ctx),
 		Group:    ctx.Group,
 	}
-	services.NewTrace(c.fs).OnReceivedWebhook(event)
-	services.NewRunWorkflows(c.fs).OnReceivedWebhook(event)
+
+	// TODO: improve error management, should not have to print them here
+	//   but since we only return once not to fail the webhook's call,
+	//   it's not ideal.
+	err = services.NewTrace(c.fs).OnReceivedWebhook(event)
+	if err != nil {
+		fmt.Printf("Trace.OnReceivedWebhook error: %s\n", err)
+	}
+	err = services.NewRunWorkflows(c.fs, c.jsRunner).OnReceivedWebhook(event)
+	if err != nil {
+		fmt.Printf("RunWorkflows.OnReceivedWebhook error: %s\n", err)
+	}
 
 	// TriggersController_Webhook: end_implement
-	return nil
+	return err
 }
 
 func uniqueID() string {

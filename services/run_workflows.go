@@ -6,19 +6,23 @@ import (
 	"github.com/spf13/afero"
 
 	"gitlab.com/letto/letto_backend/events"
-	"gitlab.com/letto/letto_backend/exec"
+	"gitlab.com/letto/letto_backend/exec/js"
 	"gitlab.com/letto/letto_backend/exec/values"
 )
 
 // RunWorkflows stores the service's config.
 type RunWorkflows struct {
-	Fs afero.Fs
+	Fs       afero.Fs
+	jsRunner js.Runner
 }
 
 // NewRunWorkflows creates a new RunWorkflowsService with
 // the specified `afero.Fs` filesystem abstraction.
-func NewRunWorkflows(fs afero.Fs) *RunWorkflows {
-	return &RunWorkflows{fs}
+func NewRunWorkflows(fs afero.Fs, jsRunner js.Runner) *RunWorkflows {
+	return &RunWorkflows{
+		Fs:       fs,
+		jsRunner: jsRunner,
+	}
 }
 
 // OnReceivedWebhook runs all workflows for the specified
@@ -31,8 +35,10 @@ func (s *RunWorkflows) OnReceivedWebhook(event events.ReceivedWebhook) error {
 		return err
 	}
 
-	runner := exec.NewJsRunner(s.Fs)
-	output, err := runner.Execute(event.Group, ctx)
+	output, err := s.jsRunner.Execute(event.Group, ctx)
+	if err != nil {
+		return err
+	}
 
 	newEvent := events.CompletedWorkflows{
 		TriggerUniqueID: event.UniqueID,

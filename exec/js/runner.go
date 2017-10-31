@@ -1,41 +1,47 @@
-package exec
+package js
 
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/spf13/afero"
 
-	"gitlab.com/letto/letto_backend/exec/js"
 	"gitlab.com/letto/letto_backend/exec/values"
 	"gitlab.com/letto/letto_backend/util"
 )
 
 var tmpDirPrefix = "letto"
 
-// PrepareJsRunner prepares the JS execution environment with the
-// specified root dir. It must be called before running
-// `Execute` on a `JsRunner`.
-func PrepareJsRunner(rootDir string) error {
-	err := js.Prepare(rootDir, os.Stdout)
-	return err
-}
-
-// JsRunner is the structure holding configuration for
+// Runner is the structure holding configuration for
 // the javascript execution environment.
-type JsRunner struct {
-	Fs afero.Fs
+//
+// `hostDataDir` is where the data is contained on the host
+// `execDataDir` is where the data will be contained on the
+//   container.
+type Runner struct {
+	Fs          afero.Fs
+	hostDataDir string
+	appDataDir  string
+	execDataDir string
 }
 
-// NewJsRunner creates a new JsRunner
-func NewJsRunner(fs afero.Fs) JsRunner {
-	return JsRunner{
-		Fs: fs,
+// NewRunner creates a new JsRunner
+func NewRunner(fs afero.Fs, hostDataDir string, appDataDir string, execDataDir string) (Runner, error) {
+	r := Runner{
+		Fs:          fs,
+		hostDataDir: hostDataDir,
+		appDataDir:  appDataDir,
+		execDataDir: execDataDir,
 	}
+	// Disabled because the Docker image is now prepared
+	// using docker-compose.
+	/*if err := dockerPrepare(os.Stdout); err != nil {
+		return r, err
+	}*/
+	return r, nil
 }
 
 // Execute runs the JS execution environment with the specified
@@ -51,15 +57,8 @@ func NewJsRunner(fs afero.Fs) JsRunner {
 //
 // The container image is built from the `exec/js` directory which
 // contains the `Dockerfile` and the `src` directory.
-func (runner *JsRunner) Execute(group string, ctx values.Context) (values.Output, error) {
+func (r *Runner) Execute(group string, ctx values.Context) (values.Output, error) {
 	output := values.Output{}
-
-	// TODO: should be injected with the location of the
-	// `exec/js` directory.
-	cwd, err := os.Getwd()
-	if err != nil {
-		return output, err
-	}
 
 	// Dump the context to a file passed to the script
 	contextJS, err := generateContextJS(ctx)
@@ -68,20 +67,19 @@ func (runner *JsRunner) Execute(group string, ctx values.Context) (values.Output
 	}
 
 	contextFileName := "context-" + util.Timestamp(time.Now()) + ".js"
-	contextFilePath := path.Join(cwd, "exec", "js", "src", contextFileName)
-	// TODO: JsRunner should not have to know to put the
-	//   JsContextFile inside `exec/js`.
-	err = afero.WriteFile(runner.Fs, contextFilePath, []byte(contextJS), 0777)
+	contextFilePath := path.Join(r.appDataDir, contextFileName)
+	err = afero.WriteFile(r.Fs, contextFilePath, []byte(contextJS), 0777)
 	if err != nil {
 		return output, err
 	}
 
-	output, err = js.Run(contextFileName)
+	output, err = dockerExecute(contextFileName, r.hostDataDir, r.execDataDir)
 	if err != nil {
 		fmt.Printf("Error while running JS workflows: %s\n", err)
+		return output, err
 	}
 
-	err = runner.Fs.Remove(contextFilePath)
+	err = r.Fs.Remove(contextFilePath)
 	if err != nil {
 		fmt.Printf("Could not remove context temp file: %s\n", contextFilePath)
 	}

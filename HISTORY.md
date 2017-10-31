@@ -1,12 +1,18 @@
 # History
 
+## 2017-10-31
+
+- Fixed implementation to enable building and running the app inside
+  the `docker` container.
+- The current implementation requires setting the correct `...DataDir`
+  paths in `main.go`. This needs to be addressed.
+
 ## 2017-10-29
 
 - Making changes to enable it running inside a Docker container and spawning
   sibling containers.
-- Currently failing when ran from Docker, probably because the `cwd` used
-  to determine the bind is now inside the container and not corresponding
-  to the host's path.
+- For now only works when run with `go run main.go`. When run using
+  `docker-compose`, the `execjs` container is not executed.
 
 ## 2017-10-22
 
