@@ -2,32 +2,29 @@ package controllers
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/json"
 	"time"
 
 	"github.com/goadesign/goa"
-	"github.com/satori/go.uuid"
-	"github.com/spf13/afero"
 
 	"gitlab.com/letto/letto_backend/app"
-	"gitlab.com/letto/letto_backend/events"
 	"gitlab.com/letto/letto_backend/exec/js"
 	"gitlab.com/letto/letto_backend/services"
-	"gitlab.com/letto/letto_backend/util"
+	"gitlab.com/letto/letto_backend/services/events"
 )
 
 // TriggersController implements the triggers resource.
 type TriggersController struct {
 	*goa.Controller
-	fs       afero.Fs
+	eventBus *services.EventBus
 	jsRunner js.Runner
 }
 
 // NewTriggersController creates a triggers controller.
-func NewTriggersController(service *goa.Service, fs afero.Fs, jsRunner js.Runner) *TriggersController {
+func NewTriggersController(service *goa.Service, eventBus *services.EventBus, jsRunner js.Runner) *TriggersController {
 	return &TriggersController{
 		Controller: service.NewController("TriggersController"),
-		fs:         fs,
+		eventBus:   eventBus,
 		jsRunner:   jsRunner,
 	}
 }
@@ -37,36 +34,30 @@ func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 	// TriggersController_Webhook: start_implement
 	var err error
 
-	event := events.ReceivedWebhook{
-		UniqueID: uniqueID(),
-		Method:   ctx.Method,
-		URL:      ctx.URL,
-		Host:     ctx.Host,
-		Body:     readBody(ctx),
-		Headers:  readHeaders(ctx),
-		Group:    ctx.Group,
+	body := readBody(ctx)
+
+	// TODO: should parse other types of body
+	parsedBody, err := parseJSONBody(body)
+	if err != nil {
+		return err
 	}
 
-	// TODO: improve error management, should not have to print them here
-	//   but since we only return once not to fail the webhook's call,
-	//   it's not ideal.
-	err = services.NewTrace(c.fs).OnReceivedWebhook(event)
-	if err != nil {
-		fmt.Printf("Trace.OnReceivedWebhook error: %s\n", err)
+	eventCtx := events.ReceivedWebhookContext{
+		ReceptionTime: time.Now(),
+		Method:        ctx.Method,
+		URL:           ctx.URL,
+		Host:          ctx.Host,
+		Body:          parsedBody,
+		Headers:       readHeaders(ctx),
 	}
-	err = services.NewRunWorkflows(c.fs, c.jsRunner).OnReceivedWebhook(event)
-	if err != nil {
-		fmt.Printf("RunWorkflows.OnReceivedWebhook error: %s\n", err)
+	eventData := events.NewEventData(ctx.Group, eventCtx)
+	event := events.ReceivedWebhookEvent{
+		EventData: eventData,
 	}
+	c.eventBus.Publish(event)
 
 	// TriggersController_Webhook: end_implement
 	return err
-}
-
-func uniqueID() string {
-	timestamp := util.Timestamp(time.Now())
-	uuid := uuid.NewV4()
-	return timestamp + "-" + uuid.String()
 }
 
 func readBody(ctx *app.WebhookTriggersContext) string {
@@ -74,6 +65,19 @@ func readBody(ctx *app.WebhookTriggersContext) string {
 	buf.ReadFrom(ctx.Body)
 	body := buf.String()
 	return body
+}
+
+func parseJSONBody(body string) (map[string]interface{}, error) {
+	var bodyParsed map[string]interface{}
+	if len(body) == 0 {
+		return nil, nil
+	}
+
+	err := json.Unmarshal([]byte(body), &bodyParsed)
+	if err != nil {
+		return nil, err
+	}
+	return bodyParsed, nil
 }
 
 func readHeaders(ctx *app.WebhookTriggersContext) map[string][]string {

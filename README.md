@@ -20,14 +20,21 @@ you just focus on the workflow you want to create!
 
 ### Write a workflow
 
-For now, you can have a single workflow, written in JS, that will be run everytime
-the `/api/triggers/webhook` endpoint is called.
+The data (`data.js`, `secrets.js` and workflow scripts) is loaded from the
+host directory mapped to `/tmp/data` (see the `docker-compose.yml` file, under
+the `web` service).
 
-To edit the workflow, simply edit the `exec/js/main.js` file.
+In the `<dataDir>/workflows` directory, you can provide the JS scripts for your
+workflows.
 
-If you have issues when the workflow runs, you can show the traces by getting the
-container's logs. First get the last container id using `docker ps -a` and
-display its logs with `docker logs <ID>`.
+You may use the `exec/js/workflow_example.js` file to see how to build a workflow
+script that is runnable.
+
+Some NPM modules are provided in the NodeJS execution environment, you're free
+to use them by requiring them. Currently, the following modules are available:
+
+- request
+- ovh
 
 ### Set credentials
 
@@ -74,7 +81,7 @@ You can use this to setup your webhooks on Letto's endpoint.
 
 NB: Letto's endpoint is: `http[s]://YOUR-DOMAIN:YOUR-PORT/api/triggers/webhook[/YOUR-GROUP]`
 
-## Deployment
+## Running
 
 ### Prerequisites
 
@@ -85,16 +92,20 @@ Install with:
     sudo curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
 
-### Run withing Docker
+### Update the JS data (data, secrets and workflows)
+
+    docker-compose build execjs
+
+### Run
 
     docker-compose build
     docker-compose up web
 
 To run the container manually:
 
-    docker run -v /var/run/docker.sock:/var/run/docker.sock -it --rm --name letto-backend letto-backend:latest
+    docker run -v /var/run/docker.sock:/var/run/docker.sock -it --rm lettobackend_web:latest
 
-#### Debug
+#### Debug the JS execution
 
 ```
 docker run -it --rm -v "$PWD/../data":/tmp/data -v "$PWD/../traces":/tmp/traces -w /usr/src/app lettobackend_execjs:latest node 

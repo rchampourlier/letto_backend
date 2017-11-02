@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 
 	"gitlab.com/letto/letto_backend/exec/values"
+	"gitlab.com/letto/letto_backend/services/events"
 	"gitlab.com/letto/letto_backend/util"
 )
 
@@ -44,63 +45,59 @@ func NewRunner(fs afero.Fs, hostDataDir string, appDataDir string, execDataDir s
 	return r, nil
 }
 
-// Execute runs the JS execution environment with the specified
-// group and context.
+// Execute runs the JS execution environment for the specified
+// event.
 //
-// The `group` determines which workflows are run (all workflows
-// defined by scripts under `src/workflows/<group>`) and each
-// workflow is passed the context.
-//
-// The context file is created in `exec/js/src`. This file
-// provides the container with the context (e.g. request's headers,
+// The event file is created in `exec/js/src`. This file
+// provides the container with the event (e.g. request's headers,
 // body...).
 //
 // The container image is built from the `exec/js` directory which
 // contains the `Dockerfile` and the `src` directory.
-func (r *Runner) Execute(group string, ctx values.Context) (values.Output, error) {
+func (r *Runner) Execute(event events.ActivatedTriggerEvent) (values.Output, error) {
 	output := values.Output{}
 
 	// Dump the context to a file passed to the script
-	contextJS, err := generateContextJS(ctx)
+	eventJS, err := generateEventJS(event.Data())
 	if err != nil {
 		return output, err
 	}
 
-	contextFileName := "context-" + util.Timestamp(time.Now()) + ".js"
-	contextFilePath := path.Join(r.appDataDir, contextFileName)
-	err = afero.WriteFile(r.Fs, contextFilePath, []byte(contextJS), 0777)
+	eventFileName := "event-" + util.Timestamp(time.Now()) + ".js"
+	eventFilePath := path.Join(r.appDataDir, eventFileName)
+	err = afero.WriteFile(r.Fs, eventFilePath, []byte(eventJS), 0777)
 	if err != nil {
 		return output, err
 	}
 
-	output, err = dockerExecute(contextFileName, r.hostDataDir, r.execDataDir)
+	output, err = dockerExecute(eventFileName, r.hostDataDir, r.execDataDir)
 	if err != nil {
 		fmt.Printf("Error while running JS workflows: %s\n", err)
 		return output, err
 	}
 
-	err = r.Fs.Remove(contextFilePath)
+	err = r.Fs.Remove(eventFilePath)
 	if err != nil {
-		fmt.Printf("Could not remove context temp file: %s\n", contextFilePath)
+		fmt.Printf("Could not remove context temp file: %s\n", eventFilePath)
 	}
 
 	return output, nil
 }
 
-// contextJS generates JS script to provide the context to
+// generateEventJS generates JS script to provide the event's data to
 // the JS scripts.
-func generateContextJS(ctx values.Context) (string, error) {
-	contextDataJS, err := json.Marshal(ctx)
+func generateEventJS(eventData events.EventData) (string, error) {
+	eventJSON, err := json.Marshal(eventData)
 	if err != nil {
 		return "", err
 	}
 
 	// Insert context data in the template JS script
-	contextJS := strings.Replace(contextJSTemplate, "{{context}}", string(contextDataJS), 1)
-	return contextJS, nil
+	eventJS := strings.Replace(eventJSTemplate, "{{event}}", string(eventJSON), 1)
+	return eventJS, nil
 }
 
-var contextJSTemplate = `
-var context = {{context}};
-module.exports = context;
+var eventJSTemplate = `
+var event = {{event}};
+module.exports = event;
 `

@@ -1,7 +1,7 @@
 // Main JS execution script
 //
 // This script will load the environment to be provided
-// to the workflows (`data`, `secrets` and `context`)
+// to the workflows (`data`, `secrets` and `event`)
 // and execute the scripts contained in 
 // `workflows/<group>`.
 
@@ -36,8 +36,9 @@ mainLog = (message) => { console.log(timestamp() + " [Exec/JS] " + message); };
 // Loading the environment
 const data = require("./data/data");
 const secrets = require("./data/secrets");
-const context = require("./data/" + process.argv[2]);
-const group = context.Group;
+const event = require("./data/" + process.argv[2]);
+const activatingEvent = event.Context.ActivatingEvent;
+const group = event.Group;
 
 // Directory containing the workflows to be executed
 const rootDir = "./data/workflows/";
@@ -58,7 +59,7 @@ fs.readdir(dir, (err, files) => {
     mainLog("Loading workflow `" + workflow + "`");
     var workflowFunc = require(dir + workflow);
     mainLog("Running workflow `" + workflow + "`");
-    workflowFunc(data, secrets, context, workflowConsole(group, workflow));
+    workflowFunc(data, secrets, activatingEvent, workflowConsole(group, workflow));
     mainLog("Completed workflow `" + workflow + "`");
   }
 });

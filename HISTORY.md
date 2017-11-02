@@ -1,5 +1,11 @@
 # History
 
+## 2017-11-02
+
+- Refactoring events to have a single point of logging, the event bus.
+  This will also make it easier to replay past triggers by simply
+  firing the event again.
+
 ## 2017-10-31
 
 - Fixed implementation to enable building and running the app inside

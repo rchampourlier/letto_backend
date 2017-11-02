@@ -10,6 +10,7 @@ import (
 	"gitlab.com/letto/letto_backend/app"
 	"gitlab.com/letto/letto_backend/controllers"
 	"gitlab.com/letto/letto_backend/exec/js"
+	"gitlab.com/letto/letto_backend/services"
 )
 
 func main() {
@@ -29,8 +30,8 @@ func main() {
 	// for the Go app.
 	appDataDir := "/tmp/data"
 
-	// TODO: make the traces dir configurable in `Trace`
-	//appTracesDir := "/tmp/traces"
+	// `appLogsDir` specifies where the logs will be stored.
+	appLogsDir := "/tmp/logs"
 
 	// `execDataDir` specified where the `data` directory will be
 	// in the context of the execution container.
@@ -41,6 +42,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// Event-bus and services
+	eventBus := services.NewEventBus(fs, appLogsDir)
+	serviceActivateTrigger := services.NewActivateTrigger(&eventBus)
+	serviceActivateTrigger.StartConsuming()
+	serviceExecuteWorkflows := services.NewExecuteWorkflows(&eventBus, jsRunner)
+	serviceExecuteWorkflows.StartConsuming()
 
 	// Create service
 	service := goa.New("letto")
@@ -54,7 +62,7 @@ func main() {
 
 	// Mount controllers
 	//app.MountWorkflowController(service, controllers.NewWorkflowController(service, &s3))
-	app.MountTriggersController(service, controllers.NewTriggersController(service, fs, jsRunner))
+	app.MountTriggersController(service, controllers.NewTriggersController(service, &eventBus, jsRunner))
 
 	// Start service
 	if err := service.ListenAndServe(":9292"); err != nil {
