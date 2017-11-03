@@ -2,13 +2,11 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/spf13/afero"
 	"log"
 	"path"
 
 	"gitlab.com/letto/letto_backend/services/events"
-	"gitlab.com/letto/letto_backend/util"
 )
 
 // EventBus stores an event-bus reference.
@@ -34,9 +32,9 @@ func NewEventBus(fs afero.Fs, logsDir string) EventBus {
 func (eb *EventBus) Publish(e events.Event) {
 	err := eb.writeEventLog(e)
 	if err != nil {
-		log.Printf("[ERROR] failed to log event `%s`\n", eventFullIdentifier(e))
+		log.Printf("[ERROR] failed to log event `%s`\n", e.FullIdentifier())
 	}
-	log.Printf("[INFO] publishing event `%s`\n", eventFullIdentifier(e))
+	log.Printf("[INFO] publishing event `%s`\n", e.FullIdentifier())
 	eb.sendToConsumingServices(e)
 }
 
@@ -72,7 +70,7 @@ func (eb *EventBus) writeEventLog(e events.Event) error {
 		return logTraceError(err)
 	}
 
-	filePath := path.Join(dirPath, eventFullIdentifier(e))
+	filePath := path.Join(dirPath, e.FullIdentifier())
 
 	// Write the content of the event to a file
 	eventAsJSON, err := json.Marshal(e.Data())
@@ -87,13 +85,8 @@ func (eb *EventBus) writeEventLog(e events.Event) error {
 	return nil
 }
 
-func eventFullIdentifier(e events.Event) string {
-	timestamp := util.Timestamp(e.Data().Time)
-	return fmt.Sprintf("%s--%s--%s--%s.json", timestamp, e.Data().ID, e.Name(), e.Data().Group)
-}
-
 func (eb *EventBus) sendToConsumingServices(e events.Event) {
-	consumingServices := eb.eventNamesConsumersMap[e.Name()]
+	consumingServices := eb.eventNamesConsumersMap[e.Data().Name]
 	for i := range consumingServices {
 		service := consumingServices[i]
 		service.Consume(e)

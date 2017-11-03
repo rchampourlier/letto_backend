@@ -17,8 +17,8 @@ import (
 	"github.com/goadesign/goa"
 	goaclient "github.com/goadesign/goa/client"
 	uuid "github.com/goadesign/goa/uuid"
-	"gitlab.com/letto/letto_backend/client"
 	"github.com/spf13/cobra"
+	"gitlab.com/letto/letto_backend/client"
 	"log"
 	"net/url"
 	"os"
@@ -156,7 +156,7 @@ Payload example:
 	}
 	tmp6 := new(WebhookTriggersCommand)
 	sub = &cobra.Command{
-		Use:   `triggers [("/api/triggers/*group"|"/api/triggers/*group")]`,
+		Use:   `triggers [("/api/triggers/webhook/*group"|"/api/triggers/webhook/*group")]`,
 		Short: ``,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp6.Run(c, args) },
 	}
@@ -325,7 +325,7 @@ func (cmd *WebhookTriggersCommand) Run(c *client.Client, args []string) error {
 	if len(args) > 0 {
 		path = args[0]
 	} else {
-		path = "/api/triggers/*group"
+		path = "/api/triggers/webhook/*group"
 	}
 	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
 	ctx := goa.WithLogger(context.Background(), logger)
@@ -362,7 +362,7 @@ func (cmd *CreateWorkflowCommand) Run(c *client.Client, args []string) error {
 	}
 	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
 	ctx := goa.WithLogger(context.Background(), logger)
-	resp, err := c.CreateWorkflow(ctx, path, &payload, cmd.ContentType)
+	resp, err := c.CreateWorkflow(ctx, path, &payload)
 	if err != nil {
 		goa.LogError(ctx, "failed", "err", err)
 		return err

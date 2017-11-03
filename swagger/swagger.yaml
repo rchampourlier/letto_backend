@@ -1,9 +1,6 @@
 basePath: /api
 consumes:
 - application/json
-- application/xml
-- application/gob
-- application/x-gob
 definitions:
   CreateWorkflowPayload:
     example:
@@ -36,7 +33,7 @@ definitions:
     example:
       href: Repellat aut eos.
       name: Odio fuga alias.
-      uuid: 66921ed1-5650-43fd-8d70-2b4a2ff4d783
+      uuid: 7e1f3197-2578-4e51-a57d-ee98846e7e4c
     properties:
       href:
         description: API href for reading a workflow
@@ -48,7 +45,7 @@ definitions:
         type: string
       uuid:
         description: Workflow UUID
-        example: 66921ed1-5650-43fd-8d70-2b4a2ff4d783
+        example: 7e1f3197-2578-4e51-a57d-ee98846e7e4c
         format: uuid
         type: string
     required:
@@ -111,7 +108,7 @@ info:
   title: The place for your complex workflows
   version: ""
 paths:
-  /triggers/{group}:
+  /triggers/webhook/{group}:
     get:
       description: Receive incoming webhook
       operationId: triggers#webhook
@@ -263,9 +260,6 @@ paths:
       - workflow
 produces:
 - application/json
-- application/xml
-- application/gob
-- application/x-gob
 responses:
   OK:
     description: OK

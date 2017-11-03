@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/goadesign/goa"
@@ -50,14 +51,12 @@ func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 		Body:          parsedBody,
 		Headers:       readHeaders(ctx),
 	}
-	eventData := events.NewEventData(ctx.Group, eventCtx)
-	event := events.ReceivedWebhookEvent{
-		EventData: eventData,
-	}
+	event := events.NewReceivedWebhookEvent(ctx.Group, eventCtx)
 	c.eventBus.Publish(event)
 
 	// TriggersController_Webhook: end_implement
-	return err
+	msg := fmt.Sprintf("Successfully processed event `%s`", event.FullIdentifier())
+	return ctx.OK([]byte(msg))
 }
 
 func readBody(ctx *app.WebhookTriggersContext) string {

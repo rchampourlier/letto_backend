@@ -96,10 +96,9 @@ Install with:
 
     docker-compose build execjs
 
-### Run
+### Rebuild and run
 
-    docker-compose build
-    docker-compose up web
+    docker-compose build && docker-compose up web
 
 To run the container manually:
 

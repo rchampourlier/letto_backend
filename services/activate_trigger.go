@@ -25,13 +25,14 @@ func NewActivateTrigger(eventBus *EventBus) *ActivateTrigger {
 // received.
 func (s *ActivateTrigger) Consume(e events.Event) error {
 	var newEvent events.Event
+	ed := e.Data()
 	switch e.(type) {
 	case events.ReceivedWebhookEvent:
-		ctx := events.ActivatedTriggerContext{e}
-		eventData := events.NewEventData(e.Data().Group, ctx)
-		newEvent = events.ActivatedTriggerEvent{
-			EventData: eventData,
-		}
+		newEvent = events.NewActivatedTriggerEvent(
+			ed.ID,
+			ed.Group,
+			events.ActivatedTriggerContext{e},
+		)
 	default:
 		log.Fatalf("Unknown event type %s\n", e)
 	}

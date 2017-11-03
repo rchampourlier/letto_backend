@@ -1,5 +1,12 @@
 # History
 
+## 2017-11-03
+
+- Added `SequenceID` to event to trace a sequence of events initiated by
+  the same event.
+- Fixed status code of `triggers/webhook` endpoint response.
+- Updated Goa and regenerated code.
+
 ## 2017-11-02
 
 - Refactoring events to have a single point of logging, the event bus.

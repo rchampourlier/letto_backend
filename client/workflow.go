@@ -30,12 +30,13 @@ type CreateWorkflowPayload struct {
 
 // CreateWorkflowPath computes a request path to the create action of workflow.
 func CreateWorkflowPath() string {
+
 	return fmt.Sprintf("/api/workflows")
 }
 
 // Create a new workflow
-func (c *Client) CreateWorkflow(ctx context.Context, path string, payload *CreateWorkflowPayload, contentType string) (*http.Response, error) {
-	req, err := c.NewCreateWorkflowRequest(ctx, path, payload, contentType)
+func (c *Client) CreateWorkflow(ctx context.Context, path string, payload *CreateWorkflowPayload) (*http.Response, error) {
+	req, err := c.NewCreateWorkflowRequest(ctx, path, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -43,12 +44,9 @@ func (c *Client) CreateWorkflow(ctx context.Context, path string, payload *Creat
 }
 
 // NewCreateWorkflowRequest create the request corresponding to the create action endpoint of the workflow resource.
-func (c *Client) NewCreateWorkflowRequest(ctx context.Context, path string, payload *CreateWorkflowPayload, contentType string) (*http.Request, error) {
+func (c *Client) NewCreateWorkflowRequest(ctx context.Context, path string, payload *CreateWorkflowPayload) (*http.Request, error) {
 	var body bytes.Buffer
-	if contentType == "" {
-		contentType = "*/*" // Use default encoder
-	}
-	err := c.Encoder.Encode(payload, &body, contentType)
+	err := c.Encoder.Encode(payload, &body, "*/*")
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode body: %s", err)
 	}
@@ -62,11 +60,7 @@ func (c *Client) NewCreateWorkflowRequest(ctx context.Context, path string, payl
 		return nil, err
 	}
 	header := req.Header
-	if contentType == "*/*" {
-		header.Set("Content-Type", "application/json")
-	} else {
-		header.Set("Content-Type", contentType)
-	}
+	header.Set("Content-Type", "application/json")
 	return req, nil
 }
 

@@ -35,9 +35,8 @@ func (s *ExecuteWorkflows) Consume(e events.Event) error {
 		ctx.Error = err.Error()
 	}
 
-	newEvent := events.ExecutedWorkflowsEvent{
-		EventData: events.NewEventData(e.Data().Group, ctx),
-	}
+	ed := e.Data()
+	newEvent := events.NewExecutedWorkflowsEvent(ed.SequenceID, ed.Group, ctx)
 
 	s.eventBus.Publish(newEvent)
 	return nil
