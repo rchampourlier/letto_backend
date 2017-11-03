@@ -32,11 +32,11 @@ func NewEventBus(fs afero.Fs, logsDir string) EventBus {
 
 // Publish publishes the specified event
 func (eb *EventBus) Publish(e events.Event) {
-	err := eb.logEvent(e)
+	err := eb.writeEventLog(e)
 	if err != nil {
-		log.Printf("[ERROR] failed to log event `%s`\n", e)
+		log.Printf("[ERROR] failed to log event `%s`\n", eventFullIdentifier(e))
 	}
-	log.Printf("[INFO] publish `%s`\n", e.Name())
+	log.Printf("[INFO] publishing event `%s`\n", eventFullIdentifier(e))
 	eb.sendToConsumingServices(e)
 }
 
@@ -65,16 +65,14 @@ func (eb *EventBus) unregisterConsumer(removedConsumer Consumer) {
 	}
 }
 
-func (eb *EventBus) logEvent(e events.Event) error {
+func (eb *EventBus) writeEventLog(e events.Event) error {
 	dirPath := eb.logsDir
 	err := eb.fs.MkdirAll(dirPath, 0777)
 	if err != nil {
 		return logTraceError(err)
 	}
-	timestamp := util.Timestamp(e.Data().Time)
-	fileName := fmt.Sprintf("%s-%s-%s-%s.json", timestamp, e.Data().ID, e.Name(), e.Data().Group)
 
-	filePath := path.Join(dirPath, fileName)
+	filePath := path.Join(dirPath, eventFullIdentifier(e))
 
 	// Write the content of the event to a file
 	eventAsJSON, err := json.Marshal(e.Data())
@@ -89,6 +87,11 @@ func (eb *EventBus) logEvent(e events.Event) error {
 	return nil
 }
 
+func eventFullIdentifier(e events.Event) string {
+	timestamp := util.Timestamp(e.Data().Time)
+	return fmt.Sprintf("%s--%s--%s--%s.json", timestamp, e.Data().ID, e.Name(), e.Data().Group)
+}
+
 func (eb *EventBus) sendToConsumingServices(e events.Event) {
 	consumingServices := eb.eventNamesConsumersMap[e.Name()]
 	for i := range consumingServices {
@@ -98,6 +101,6 @@ func (eb *EventBus) sendToConsumingServices(e events.Event) {
 }
 
 func logTraceError(err error) error {
-	log.Printf("[ERROR] failed to write file (%s)\n", err)
+	log.Printf("[ERROR] failed to write file `%s`\n", err)
 	return err
 }

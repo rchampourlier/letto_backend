@@ -36,7 +36,7 @@ func (c *TriggersController) Webhook(ctx *app.WebhookTriggersContext) error {
 
 	body := readBody(ctx)
 
-	// TODO: should parse other types of body
+	// TODO: should support non-JSON bodies
 	parsedBody, err := parseJSONBody(body)
 	if err != nil {
 		return err
