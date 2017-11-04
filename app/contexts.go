@@ -14,7 +14,35 @@ import (
 	"context"
 	"github.com/goadesign/goa"
 	"net/http"
+	"unicode/utf8"
 )
+
+// HealthHealthContext provides the health health action context.
+type HealthHealthContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+}
+
+// NewHealthHealthContext parses the incoming request URL and body, performs validations and creates the
+// context used by the health controller health action.
+func NewHealthHealthContext(ctx context.Context, r *http.Request, service *goa.Service) (*HealthHealthContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := HealthHealthContext{Context: ctx, ResponseData: resp, RequestData: req}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *HealthHealthContext) OK(resp []byte) error {
+	ctx.ResponseData.Header().Set("Content-Type", "text/plain")
+	ctx.ResponseData.WriteHeader(200)
+	_, err := ctx.ResponseData.Write(resp)
+	return err
+}
 
 // WebhookTriggersContext provides the triggers webhook action context.
 type WebhookTriggersContext struct {
@@ -71,28 +99,26 @@ func NewCreateWorkflowContext(ctx context.Context, r *http.Request, service *goa
 
 // createWorkflowPayload is the workflow create action payload.
 type createWorkflowPayload struct {
-	// A way of grouping workflows together to be triggered by a specific endpoint's URL
-	Group *string `form:"group,omitempty" json:"group,omitempty" xml:"group,omitempty"`
-	// Name of the workflow
-	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
-	// Source code to execute for this workflow
-	Source *string `form:"source,omitempty" json:"source,omitempty" xml:"source,omitempty"`
+	Path       *string `form:"path,omitempty" json:"path,omitempty" xml:"path,omitempty"`
+	SourceCode *string `form:"source_code,omitempty" json:"source_code,omitempty" xml:"source_code,omitempty"`
 }
 
 // Validate runs the validation rules defined in the design.
 func (payload *createWorkflowPayload) Validate() (err error) {
-	if payload.Source == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "source"))
+	if payload.Path == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "path"))
 	}
-	if payload.Name == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "name"))
+	if payload.SourceCode == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "source_code"))
 	}
-	if payload.Group == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "group"))
+	if payload.Path != nil {
+		if utf8.RuneCountInString(*payload.Path) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.path`, *payload.Path, utf8.RuneCountInString(*payload.Path), 1, true))
+		}
 	}
-	if payload.Group != nil {
-		if ok := goa.ValidatePattern(`\A[\w-]+\z`, *payload.Group); !ok {
-			err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.group`, *payload.Group, `\A[\w-]+\z`))
+	if payload.SourceCode != nil {
+		if utf8.RuneCountInString(*payload.SourceCode) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.source_code`, *payload.SourceCode, utf8.RuneCountInString(*payload.SourceCode), 1, true))
 		}
 	}
 	return
@@ -101,41 +127,34 @@ func (payload *createWorkflowPayload) Validate() (err error) {
 // Publicize creates CreateWorkflowPayload from createWorkflowPayload
 func (payload *createWorkflowPayload) Publicize() *CreateWorkflowPayload {
 	var pub CreateWorkflowPayload
-	if payload.Group != nil {
-		pub.Group = *payload.Group
+	if payload.Path != nil {
+		pub.Path = *payload.Path
 	}
-	if payload.Name != nil {
-		pub.Name = *payload.Name
-	}
-	if payload.Source != nil {
-		pub.Source = *payload.Source
+	if payload.SourceCode != nil {
+		pub.SourceCode = *payload.SourceCode
 	}
 	return &pub
 }
 
 // CreateWorkflowPayload is the workflow create action payload.
 type CreateWorkflowPayload struct {
-	// A way of grouping workflows together to be triggered by a specific endpoint's URL
-	Group string `form:"group" json:"group" xml:"group"`
-	// Name of the workflow
-	Name string `form:"name" json:"name" xml:"name"`
-	// Source code to execute for this workflow
-	Source string `form:"source" json:"source" xml:"source"`
+	Path       string `form:"path" json:"path" xml:"path"`
+	SourceCode string `form:"source_code" json:"source_code" xml:"source_code"`
 }
 
 // Validate runs the validation rules defined in the design.
 func (payload *CreateWorkflowPayload) Validate() (err error) {
-	if payload.Source == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "source"))
+	if payload.Path == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "path"))
 	}
-	if payload.Name == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "name"))
+	if payload.SourceCode == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "source_code"))
 	}
-	if payload.Group == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "group"))
+	if utf8.RuneCountInString(payload.Path) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.path`, payload.Path, utf8.RuneCountInString(payload.Path), 1, true))
 	}
-	if ok := goa.ValidatePattern(`\A[\w-]+\z`, payload.Group); !ok {
-		err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.group`, payload.Group, `\A[\w-]+\z`))
+	if utf8.RuneCountInString(payload.SourceCode) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.source_code`, payload.SourceCode, utf8.RuneCountInString(payload.SourceCode), 1, true))
 	}
 	return
 }
@@ -163,7 +182,7 @@ type DeleteWorkflowContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
-	WorkflowUUID string
+	WorkflowID string
 }
 
 // NewDeleteWorkflowContext parses the incoming request URL and body, performs validations and creates the
@@ -175,10 +194,10 @@ func NewDeleteWorkflowContext(ctx context.Context, r *http.Request, service *goa
 	req := goa.ContextRequest(ctx)
 	req.Request = r
 	rctx := DeleteWorkflowContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramWorkflowUUID := req.Params["workflowUUID"]
-	if len(paramWorkflowUUID) > 0 {
-		rawWorkflowUUID := paramWorkflowUUID[0]
-		rctx.WorkflowUUID = rawWorkflowUUID
+	paramWorkflowID := req.Params["workflowID"]
+	if len(paramWorkflowID) > 0 {
+		rawWorkflowID := paramWorkflowID[0]
+		rctx.WorkflowID = rawWorkflowID
 	}
 	return &rctx, err
 }
@@ -191,12 +210,6 @@ func (ctx *DeleteWorkflowContext) OK(r *LettoWorkflow) error {
 
 // OKFull sends a HTTP response with status code 200.
 func (ctx *DeleteWorkflowContext) OKFull(r *LettoWorkflowFull) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json")
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
-// OKLink sends a HTTP response with status code 200.
-func (ctx *DeleteWorkflowContext) OKLink(r *LettoWorkflowLink) error {
 	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json")
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
@@ -221,8 +234,20 @@ func NewListWorkflowContext(ctx context.Context, r *http.Request, service *goa.S
 }
 
 // OK sends a HTTP response with status code 200.
-func (ctx *ListWorkflowContext) OK(r *LettoWorkflowList) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow_list+json")
+func (ctx *ListWorkflowContext) OK(r LettoWorkflowCollection) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json; type=collection")
+	if r == nil {
+		r = LettoWorkflowCollection{}
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// OKFull sends a HTTP response with status code 200.
+func (ctx *ListWorkflowContext) OKFull(r LettoWorkflowFullCollection) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json; type=collection")
+	if r == nil {
+		r = LettoWorkflowFullCollection{}
+	}
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
 
@@ -231,7 +256,7 @@ type ReadWorkflowContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
-	WorkflowUUID string
+	WorkflowID string
 }
 
 // NewReadWorkflowContext parses the incoming request URL and body, performs validations and creates the
@@ -243,10 +268,10 @@ func NewReadWorkflowContext(ctx context.Context, r *http.Request, service *goa.S
 	req := goa.ContextRequest(ctx)
 	req.Request = r
 	rctx := ReadWorkflowContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramWorkflowUUID := req.Params["workflowUUID"]
-	if len(paramWorkflowUUID) > 0 {
-		rawWorkflowUUID := paramWorkflowUUID[0]
-		rctx.WorkflowUUID = rawWorkflowUUID
+	paramWorkflowID := req.Params["workflowID"]
+	if len(paramWorkflowID) > 0 {
+		rawWorkflowID := paramWorkflowID[0]
+		rctx.WorkflowID = rawWorkflowID
 	}
 	return &rctx, err
 }
@@ -263,18 +288,13 @@ func (ctx *ReadWorkflowContext) OKFull(r *LettoWorkflowFull) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
 
-// OKLink sends a HTTP response with status code 200.
-func (ctx *ReadWorkflowContext) OKLink(r *LettoWorkflowLink) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json")
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
-}
-
 // UpdateWorkflowContext provides the workflow update action context.
 type UpdateWorkflowContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
-	WorkflowUUID string
+	WorkflowID string
+	Payload    *UpdateWorkflowPayload
 }
 
 // NewUpdateWorkflowContext parses the incoming request URL and body, performs validations and creates the
@@ -286,28 +306,90 @@ func NewUpdateWorkflowContext(ctx context.Context, r *http.Request, service *goa
 	req := goa.ContextRequest(ctx)
 	req.Request = r
 	rctx := UpdateWorkflowContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramWorkflowUUID := req.Params["workflowUUID"]
-	if len(paramWorkflowUUID) > 0 {
-		rawWorkflowUUID := paramWorkflowUUID[0]
-		rctx.WorkflowUUID = rawWorkflowUUID
+	paramWorkflowID := req.Params["workflowID"]
+	if len(paramWorkflowID) > 0 {
+		rawWorkflowID := paramWorkflowID[0]
+		rctx.WorkflowID = rawWorkflowID
 	}
 	return &rctx, err
 }
 
-// OK sends a HTTP response with status code 200.
-func (ctx *UpdateWorkflowContext) OK(r *LettoWorkflow) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json")
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+// updateWorkflowPayload is the workflow update action payload.
+type updateWorkflowPayload struct {
+	Path       *string `form:"path,omitempty" json:"path,omitempty" xml:"path,omitempty"`
+	SourceCode *string `form:"source_code,omitempty" json:"source_code,omitempty" xml:"source_code,omitempty"`
 }
 
-// OKFull sends a HTTP response with status code 200.
-func (ctx *UpdateWorkflowContext) OKFull(r *LettoWorkflowFull) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json")
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+// Validate runs the validation rules defined in the design.
+func (payload *updateWorkflowPayload) Validate() (err error) {
+	if payload.Path == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "path"))
+	}
+	if payload.SourceCode == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "source_code"))
+	}
+	if payload.Path != nil {
+		if utf8.RuneCountInString(*payload.Path) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.path`, *payload.Path, utf8.RuneCountInString(*payload.Path), 1, true))
+		}
+	}
+	if payload.SourceCode != nil {
+		if utf8.RuneCountInString(*payload.SourceCode) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.source_code`, *payload.SourceCode, utf8.RuneCountInString(*payload.SourceCode), 1, true))
+		}
+	}
+	return
 }
 
-// OKLink sends a HTTP response with status code 200.
-func (ctx *UpdateWorkflowContext) OKLink(r *LettoWorkflowLink) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/letto.workflow+json")
-	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+// Publicize creates UpdateWorkflowPayload from updateWorkflowPayload
+func (payload *updateWorkflowPayload) Publicize() *UpdateWorkflowPayload {
+	var pub UpdateWorkflowPayload
+	if payload.Path != nil {
+		pub.Path = *payload.Path
+	}
+	if payload.SourceCode != nil {
+		pub.SourceCode = *payload.SourceCode
+	}
+	return &pub
+}
+
+// UpdateWorkflowPayload is the workflow update action payload.
+type UpdateWorkflowPayload struct {
+	Path       string `form:"path" json:"path" xml:"path"`
+	SourceCode string `form:"source_code" json:"source_code" xml:"source_code"`
+}
+
+// Validate runs the validation rules defined in the design.
+func (payload *UpdateWorkflowPayload) Validate() (err error) {
+	if payload.Path == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "path"))
+	}
+	if payload.SourceCode == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "source_code"))
+	}
+	if utf8.RuneCountInString(payload.Path) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.path`, payload.Path, utf8.RuneCountInString(payload.Path), 1, true))
+	}
+	if utf8.RuneCountInString(payload.SourceCode) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError(`raw.source_code`, payload.SourceCode, utf8.RuneCountInString(payload.SourceCode), 1, true))
+	}
+	return
+}
+
+// NoContent sends a HTTP response with status code 204.
+func (ctx *UpdateWorkflowContext) NoContent() error {
+	ctx.ResponseData.WriteHeader(204)
+	return nil
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *UpdateWorkflowContext) BadRequest(r error) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *UpdateWorkflowContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
 }

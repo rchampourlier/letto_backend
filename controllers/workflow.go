@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"fmt"
-
 	"github.com/goadesign/goa"
 	"gitlab.com/letto/letto_backend/adapters"
 	"gitlab.com/letto/letto_backend/app"
@@ -32,9 +30,24 @@ func parameterize(s string) string {
 	return util.Parameterize(s, '-')
 }
 
-func genPath(group string, name string) string {
-	pName := parameterize(name)
-	return fmt.Sprintf("/workflows/%s/%s.js", group, pName)
+// List runs the list action.
+func (c *WorkflowController) List(ctx *app.ListWorkflowContext) error {
+	// WorkflowController_List: start_implement
+
+	workflowPaths, err := c.adapter.ListObjectPaths()
+	if err != nil {
+		// TODO: should not panic here!
+		panic(err)
+	}
+	workflowList := make(app.LettoWorkflowCollection, len(workflowPaths))
+	for i, wp := range workflowPaths {
+		workflowList[i] = &app.LettoWorkflow{
+			Path: wp,
+		}
+	}
+
+	// WorkflowController_List: end_implement
+	return ctx.OK(workflowList)
 }
 
 // Create creates a new workflow and stores it on the chosen adapter
@@ -42,12 +55,9 @@ func genPath(group string, name string) string {
 func (c *WorkflowController) Create(ctx *app.CreateWorkflowContext) error {
 	// WorkflowController_Create: start_implement
 
-	name := ctx.Payload.Name
-	group := ctx.Payload.Group
-	path := genPath(group, name)
-
-	c.adapter.CreateObject(path, ctx.Payload.Source)
-	ctx.ResponseData.Header().Set("Location", path)
+	path := ctx.Payload.Path
+	c.adapter.CreateObject(path, ctx.Payload.SourceCode)
+	ctx.ResponseData.Header().Set("Location", app.WorkflowHref(path))
 
 	// WorkflowController_Create: end_implement
 
@@ -62,17 +72,6 @@ func (c *WorkflowController) Delete(ctx *app.DeleteWorkflowContext) error {
 
 	// WorkflowController_Delete: end_implement
 	res := &app.LettoWorkflow{}
-	return ctx.OK(res)
-}
-
-// List runs the list action.
-func (c *WorkflowController) List(ctx *app.ListWorkflowContext) error {
-	// WorkflowController_List: start_implement
-
-	// Put your logic here
-
-	// WorkflowController_List: end_implement
-	res := &app.LettoWorkflowList{}
 	return ctx.OK(res)
 }
 
@@ -92,8 +91,9 @@ func (c *WorkflowController) Update(ctx *app.UpdateWorkflowContext) error {
 	// WorkflowController_Update: start_implement
 
 	// Put your logic here
+	// TODO: should not panic!
+	panic("Not implemented")
 
 	// WorkflowController_Update: end_implement
-	res := &app.LettoWorkflow{}
-	return ctx.OK(res)
+	//return ctx.NoContent()
 }

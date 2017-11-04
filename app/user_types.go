@@ -9,3 +9,62 @@
 // --version=v1.3.0
 
 package app
+
+import (
+	"github.com/goadesign/goa"
+	"unicode/utf8"
+)
+
+// workflowPayload user type.
+type workflowPayload struct {
+	Path       *string `form:"path,omitempty" json:"path,omitempty" xml:"path,omitempty"`
+	SourceCode *string `form:"source_code,omitempty" json:"source_code,omitempty" xml:"source_code,omitempty"`
+}
+
+// Validate validates the workflowPayload type instance.
+func (ut *workflowPayload) Validate() (err error) {
+	if ut.Path != nil {
+		if utf8.RuneCountInString(*ut.Path) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`request.path`, *ut.Path, utf8.RuneCountInString(*ut.Path), 1, true))
+		}
+	}
+	if ut.SourceCode != nil {
+		if utf8.RuneCountInString(*ut.SourceCode) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`request.source_code`, *ut.SourceCode, utf8.RuneCountInString(*ut.SourceCode), 1, true))
+		}
+	}
+	return
+}
+
+// Publicize creates WorkflowPayload from workflowPayload
+func (ut *workflowPayload) Publicize() *WorkflowPayload {
+	var pub WorkflowPayload
+	if ut.Path != nil {
+		pub.Path = ut.Path
+	}
+	if ut.SourceCode != nil {
+		pub.SourceCode = ut.SourceCode
+	}
+	return &pub
+}
+
+// WorkflowPayload user type.
+type WorkflowPayload struct {
+	Path       *string `form:"path,omitempty" json:"path,omitempty" xml:"path,omitempty"`
+	SourceCode *string `form:"source_code,omitempty" json:"source_code,omitempty" xml:"source_code,omitempty"`
+}
+
+// Validate validates the WorkflowPayload type instance.
+func (ut *WorkflowPayload) Validate() (err error) {
+	if ut.Path != nil {
+		if utf8.RuneCountInString(*ut.Path) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`type.path`, *ut.Path, utf8.RuneCountInString(*ut.Path), 1, true))
+		}
+	}
+	if ut.SourceCode != nil {
+		if utf8.RuneCountInString(*ut.SourceCode) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError(`type.source_code`, *ut.SourceCode, utf8.RuneCountInString(*ut.SourceCode), 1, true))
+		}
+	}
+	return
+}

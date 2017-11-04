@@ -9,3 +9,12 @@
 // --version=v1.3.0
 
 package app
+
+import (
+	"fmt"
+)
+
+// WorkflowHref returns the workflow href.
+func WorkflowHref(path string) string {
+	return fmt.Sprintf("/api/workflows/%s", path)
+}

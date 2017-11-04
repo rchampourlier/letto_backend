@@ -12,29 +12,24 @@ package app
 
 import (
 	"github.com/goadesign/goa"
-	uuid "github.com/satori/go.uuid"
+	"unicode/utf8"
 )
 
 // An automation workflow (default view)
 //
 // Identifier: application/letto.workflow+json; view=default
 type LettoWorkflow struct {
-	// API href for reading a workflow
-	Href string `form:"href" json:"href" xml:"href"`
-	// Name for the workflow
-	Name string `form:"name" json:"name" xml:"name"`
-	// Workflow UUID
-	UUID uuid.UUID `form:"uuid" json:"uuid" xml:"uuid"`
+	// Path to the workflow
+	Path string `form:"path" json:"path" xml:"path"`
 }
 
 // Validate validates the LettoWorkflow media type instance.
 func (mt *LettoWorkflow) Validate() (err error) {
-
-	if mt.Href == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "href"))
+	if mt.Path == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "path"))
 	}
-	if mt.Name == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "name"))
+	if utf8.RuneCountInString(mt.Path) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError(`response.path`, mt.Path, utf8.RuneCountInString(mt.Path), 1, true))
 	}
 	return
 }
@@ -43,55 +38,59 @@ func (mt *LettoWorkflow) Validate() (err error) {
 //
 // Identifier: application/letto.workflow+json; view=full
 type LettoWorkflowFull struct {
-	// API href for reading a workflow
-	Href string `form:"href" json:"href" xml:"href"`
-	// Name for the workflow
-	Name string `form:"name" json:"name" xml:"name"`
-	// Source code for the workflow
-	Source string `form:"source" json:"source" xml:"source"`
-	// Workflow UUID
-	UUID uuid.UUID `form:"uuid" json:"uuid" xml:"uuid"`
+	// Path to the workflow
+	Path string `form:"path" json:"path" xml:"path"`
+	// Source code of the workflow
+	SourceCode string `form:"source_code" json:"source_code" xml:"source_code"`
 }
 
 // Validate validates the LettoWorkflowFull media type instance.
 func (mt *LettoWorkflowFull) Validate() (err error) {
-
-	if mt.Href == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "href"))
+	if mt.Path == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "path"))
 	}
-	if mt.Name == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "name"))
+	if mt.SourceCode == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "source_code"))
 	}
-	if mt.Source == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "source"))
+	if utf8.RuneCountInString(mt.Path) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError(`response.path`, mt.Path, utf8.RuneCountInString(mt.Path), 1, true))
 	}
-	return
-}
-
-// An automation workflow (link view)
-//
-// Identifier: application/letto.workflow+json; view=link
-type LettoWorkflowLink struct {
-	// API href for reading a workflow
-	Href string `form:"href" json:"href" xml:"href"`
-}
-
-// Validate validates the LettoWorkflowLink media type instance.
-func (mt *LettoWorkflowLink) Validate() (err error) {
-	if mt.Href == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "href"))
+	if utf8.RuneCountInString(mt.SourceCode) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError(`response.source_code`, mt.SourceCode, utf8.RuneCountInString(mt.SourceCode), 1, true))
 	}
 	return
 }
 
-// LettoWorkflow_list media type (default view)
+// LettoWorkflowCollection is the media type for an array of LettoWorkflow (default view)
 //
-// Identifier: application/letto.workflow_list+json; view=default
-type LettoWorkflowList struct {
-	// Links to related resources
-	Links *LettoWorkflowListLinks `form:"links,omitempty" json:"links,omitempty" xml:"links,omitempty"`
+// Identifier: application/letto.workflow+json; type=collection; view=default
+type LettoWorkflowCollection []*LettoWorkflow
+
+// Validate validates the LettoWorkflowCollection media type instance.
+func (mt LettoWorkflowCollection) Validate() (err error) {
+	for _, e := range mt {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
 }
 
-// LettoWorkflow_listLinks contains links to related resources of LettoWorkflow_list.
-type LettoWorkflowListLinks struct {
+// LettoWorkflowCollection is the media type for an array of LettoWorkflow (full view)
+//
+// Identifier: application/letto.workflow+json; type=collection; view=full
+type LettoWorkflowFullCollection []*LettoWorkflowFull
+
+// Validate validates the LettoWorkflowFullCollection media type instance.
+func (mt LettoWorkflowFullCollection) Validate() (err error) {
+	for _, e := range mt {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
 }

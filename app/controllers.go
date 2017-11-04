@@ -27,6 +27,33 @@ func initService(service *goa.Service) {
 	service.Decoder.Register(goa.NewJSONDecoder, "*/*")
 }
 
+// HealthController is the controller interface for the Health actions.
+type HealthController interface {
+	goa.Muxer
+	Health(*HealthHealthContext) error
+}
+
+// MountHealthController "mounts" a Health resource controller on the given service.
+func MountHealthController(service *goa.Service, ctrl HealthController) {
+	initService(service)
+	var h goa.Handler
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewHealthHealthContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Health(rctx)
+	}
+	service.Mux.Handle("GET", "/api/_ah/health", ctrl.MuxHandler("health", h, nil))
+	service.LogInfo("mount", "ctrl", "Health", "action", "Health", "route", "GET /api/_ah/health")
+}
+
 // TriggersController is the controller interface for the Triggers actions.
 type TriggersController interface {
 	goa.Muxer
@@ -104,8 +131,8 @@ func MountWorkflowController(service *goa.Service, ctrl WorkflowController) {
 		}
 		return ctrl.Delete(rctx)
 	}
-	service.Mux.Handle("DELETE", "/api/workflows/:workflowUUID", ctrl.MuxHandler("delete", h, nil))
-	service.LogInfo("mount", "ctrl", "Workflow", "action", "Delete", "route", "DELETE /api/workflows/:workflowUUID")
+	service.Mux.Handle("DELETE", "/api/workflows/:workflowID", ctrl.MuxHandler("delete", h, nil))
+	service.LogInfo("mount", "ctrl", "Workflow", "action", "Delete", "route", "DELETE /api/workflows/:workflowID")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -134,8 +161,8 @@ func MountWorkflowController(service *goa.Service, ctrl WorkflowController) {
 		}
 		return ctrl.Read(rctx)
 	}
-	service.Mux.Handle("GET", "/api/workflows/:workflowUUID", ctrl.MuxHandler("read", h, nil))
-	service.LogInfo("mount", "ctrl", "Workflow", "action", "Read", "route", "GET /api/workflows/:workflowUUID")
+	service.Mux.Handle("GET", "/api/workflows/:workflowID", ctrl.MuxHandler("read", h, nil))
+	service.LogInfo("mount", "ctrl", "Workflow", "action", "Read", "route", "GET /api/workflows/:workflowID")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -147,15 +174,36 @@ func MountWorkflowController(service *goa.Service, ctrl WorkflowController) {
 		if err != nil {
 			return err
 		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*UpdateWorkflowPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
 		return ctrl.Update(rctx)
 	}
-	service.Mux.Handle("PUT", "/api/workflows/:workflowUUID", ctrl.MuxHandler("update", h, nil))
-	service.LogInfo("mount", "ctrl", "Workflow", "action", "Update", "route", "PUT /api/workflows/:workflowUUID")
+	service.Mux.Handle("PUT", "/api/workflows/:workflowID", ctrl.MuxHandler("update", h, unmarshalUpdateWorkflowPayload))
+	service.LogInfo("mount", "ctrl", "Workflow", "action", "Update", "route", "PUT /api/workflows/:workflowID")
 }
 
 // unmarshalCreateWorkflowPayload unmarshals the request body into the context request data Payload field.
 func unmarshalCreateWorkflowPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
 	payload := &createWorkflowPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	if err := payload.Validate(); err != nil {
+		// Initialize payload with private data structure so it can be logged
+		goa.ContextRequest(ctx).Payload = payload
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// unmarshalUpdateWorkflowPayload unmarshals the request body into the context request data Payload field.
+func unmarshalUpdateWorkflowPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &updateWorkflowPayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
 		return err
 	}

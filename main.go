@@ -4,11 +4,13 @@ package main
 
 import (
 	"os"
+	"path"
 
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
 	"github.com/spf13/afero"
 
+	"gitlab.com/letto/letto_backend/adapters"
 	"gitlab.com/letto/letto_backend/app"
 	"gitlab.com/letto/letto_backend/controllers"
 	"gitlab.com/letto/letto_backend/exec/js"
@@ -65,7 +67,7 @@ func main() {
 
 	// Create service
 	service := goa.New("letto")
-	//s3 := adapters.NewS3("letto")
+	workflowsAdapter := adapters.NewAferoFs(fs, path.Join(appDataDir, "workflows"))
 
 	// Mount middleware
 	service.Use(middleware.RequestID())
@@ -74,7 +76,7 @@ func main() {
 	service.Use(middleware.Recover())
 
 	// Mount controllers
-	//app.MountWorkflowController(service, controllers.NewWorkflowController(service, &s3))
+	app.MountWorkflowController(service, controllers.NewWorkflowController(service, &workflowsAdapter))
 	app.MountTriggersController(service, controllers.NewTriggersController(service, &eventBus, jsRunner))
 
 	// Start service

@@ -111,10 +111,10 @@ func (c *Client) DecodeLettoWorkflowLink(resp *http.Response) (*LettoWorkflowLin
 // Identifier: application/letto.workflow_list+json; view=default
 type LettoWorkflowList struct {
 	// Links to related resources
-	Links *LettoWorkflowListLinks `form:"links,omitempty" json:"links,omitempty" xml:"links,omitempty"`
+	Links *LettoWorkflowListLinks `json:"links,omitempty"`
 }
 
-// LettoWorkflow_listLinks contains links to related resources of LettoWorkflow_list.
+// LettoWorkflowListLinks contains links to related resources of LettoWorkflowList.
 type LettoWorkflowListLinks struct {
 }
 

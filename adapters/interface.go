@@ -5,5 +5,6 @@ package adapters
 // providers in the future but it also enables to create a MockAdapter
 // for testing.
 type Adapter interface {
-	CreateObject(path string, source string) (err error)
+	ListObjectPaths() ([]string, error)
+	CreateObject(path string, source string) error
 }
