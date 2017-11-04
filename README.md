@@ -53,10 +53,7 @@ To integrated with Trello, you will need to:
 2. Setup a webhook in Trello to call your Letto endpoint, which is done in Trello
    through the API only.
 
-We follow the Trello documentation which you will find [here](https://trello.readme.io/v1.0/reference#introduction),
-but also provide a summary of instructions to get you on track faster. Please note
-it may not be up-to-date at your time of reading, and feel free to open a pull-request
-to fix it!
+We follow the Trello documentation which you will find [here](https://trello.readme.io/v1.0/reference#introduction), but also provide a summary of instructions to get you on track faster. Please note it may not be up-to-date at your time of reading, and feel free to open a pull-request to fix it!
 
 **Getting Trello credentials**
 
