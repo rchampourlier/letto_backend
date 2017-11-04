@@ -1,5 +1,9 @@
 # History
 
+## 2017-11-04
+
+- `hostDataDir` is now always defined to `$HOME/letto_data`.
+
 ## 2017-11-03
 
 - Added `SequenceID` to event to trace a sequence of events initiated by

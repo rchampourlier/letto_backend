@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/afero"
 	"log"
 	"path"
+	"reflect"
 
 	"gitlab.com/letto/letto_backend/services/events"
 )
@@ -89,8 +90,15 @@ func (eb *EventBus) sendToConsumingServices(e events.Event) {
 	consumingServices := eb.eventNamesConsumersMap[e.Data().Name]
 	for i := range consumingServices {
 		service := consumingServices[i]
-		service.Consume(e)
+		err := service.Consume(e)
+		if err != nil {
+			logServiceError(err, service, e)
+		}
 	}
+}
+
+func logServiceError(err error, c Consumer, e events.Event) {
+	log.Printf("[ERROR] error with service `%s` for event `%s` (%s)\n", reflect.TypeOf(c), e.FullIdentifier(), err)
 }
 
 func logTraceError(err error) error {

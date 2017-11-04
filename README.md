@@ -89,9 +89,11 @@ Install with:
     sudo curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
 
-### Update the JS data (data, secrets and workflows)
+**letto_data**
 
-    docker-compose build execjs
+The `letto_data` directory, containing the `secrets.js`, `data.js` and workflow JS scripts must be present in the home directory.
+
+See [letto_data](https://gitlab.com/letto/letto_data) for more information.
 
 ### Rebuild and run
 
@@ -120,3 +122,7 @@ RUN mv deploy_key ~/.ssh/id_rsa
 RUN mv deploy_key.pub ~/.ssh/id_rsa.pub
 RUN echo "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 ```
+
+## Deploy
+
+See [letto_infrastructure](https://gitlab.com/letto/letto_infrastructure).

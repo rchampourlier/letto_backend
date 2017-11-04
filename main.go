@@ -3,6 +3,9 @@
 package main
 
 import (
+	"os"
+	"path"
+
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
 	"github.com/spf13/afero"
@@ -24,7 +27,7 @@ func main() {
 
 	// `hostDataDir` defines where the `data` directory is contained
 	// on the host.
-	hostDataDir := "/home/ubuntu/letto_data"
+	hostDataDir := path.Join(os.Getenv("HOME"), "letto_data")
 
 	// `appDataDir` indicates where the `data` directory will be
 	// for the Go app.
