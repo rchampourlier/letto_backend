@@ -4,7 +4,6 @@ package main
 
 import (
 	"os"
-	"path"
 
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
@@ -27,7 +26,18 @@ func main() {
 
 	// `hostDataDir` defines where the `data` directory is contained
 	// on the host.
-	hostDataDir := path.Join(os.Getenv("HOME"), "letto_data")
+	//
+	// It should be passed as the first argument to the application.
+	// In a Docker context, this should be done in the `docker-compose.yml`
+	// which will also determine the location of the corresponding
+	// volume.
+	//
+	// NB: this directory cannot be determined using `os.Getenv("HOME")`
+	//     or any approach relying on the execution environment. Indeed,
+	//     the directory is the host's directory, while the application
+	//     is to be executed by a Docker container, which will not
+	//     have the correct path for the data dir.
+	hostDataDir := os.Args[1]
 
 	// `appDataDir` indicates where the `data` directory will be
 	// for the Go app.

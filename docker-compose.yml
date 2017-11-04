@@ -8,6 +8,7 @@ services:
       - $HOME/letto_data:/tmp/data
       - $HOME/letto_logs:/tmp/logs
       - /var/run/docker.sock:/var/run/docker.sock
+    command: ["go-wrapper", "run", "$HOME/letto_data"]
   execjs:
     build: ./exec/js
     volumes:

@@ -1,8 +1,8 @@
 # History
 
-## 2017-11-04
+## 2017-11-05
 
-- `hostDataDir` is now always defined to `$HOME/letto_data`.
+- `hostDataDir` is now always passed as the 1st argument of the application.
 
 ## 2017-11-03
 
