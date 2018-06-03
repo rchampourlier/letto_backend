@@ -6,32 +6,22 @@
 
 ## Objective
 
-With Letto, I want to make it easier to build a custom workflow
-to trigger automated processes based on the events triggered by
-web services.
+With Letto, I want to make it easier to build a custom workflow to trigger automated processes based on the events triggered by web services.
 
-It's like IFTTT or Zapier, but developer-oriented, where you
-would be able to do anything by writing code, but with the
-ease-of-use of a dedicated SAAS tool (so no code deployment,
-no developing interactions components, no handling authentication...),
-you just focus on the workflow you want to create!
+It's like IFTTT or Zapier, but developer-oriented, where you would be able to do anything by writing code, but with the ease-of-use of a dedicated SAAS tool (so no code deployment, no developing interactions components, no handling authentication...), you just focus on the workflow you want to create!
 
 ## Howto
 
 ### Write a workflow
 
-The data (`data.js`, `secrets.js` and workflow scripts) is loaded from the
-host directory mapped to `/tmp/data` (see the `docker-compose.yml` file, under
-the `web` service).
+The data (`data.js`, `secrets.js` and workflow scripts) is loaded from the host directory mapped to `/tmp/data` (see the `docker-compose.yml` file, under
+the `web` service).  
 
-In the `<dataDir>/workflows` directory, you can provide the JS scripts for your
-workflows.
+In the `<dataDir>/workflows` directory, you can provide the JS scripts for your workflows.
 
-You may use the `exec/js/workflow_example.js` file to see how to build a workflow
-script that is runnable.
+You may use the `exec/js/workflow_example.js` file to see how to build a workflow script that is runnable.
 
-Some NPM modules are provided in the NodeJS execution environment, you're free
-to use them by requiring them. Currently, the following modules are available:
+Some NPM modules are provided in the NodeJS execution environment, you're free to use them by requiring them. Currently, the following modules are available:
 
 - request
 - ovh
@@ -47,7 +37,7 @@ committed.
 
 ### Integrate with Trello
 
-To integrated with Trello, you will need to:
+To integrate with Trello, you will need to:
 
 1. Be able to perform API calls from your workflow, so you will need API credentials.
 2. Setup a webhook in Trello to call your Letto endpoint, which is done in Trello
@@ -86,8 +76,10 @@ NB: Letto's endpoint is: `http[s]://YOUR-DOMAIN:YOUR-PORT/api/triggers/webhook[/
 
 Install with: 
 
+```
     sudo curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
+```
 
 **letto_data**
 
