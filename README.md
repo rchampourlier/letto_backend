@@ -2,7 +2,7 @@
 
 ## Status
 
-**Letto is a work-in-progress!!!** It's not usable yet.
+**[ABANDONED - REPLACED BY webtask.io] A serverless platform for developers with a great UX**
 
 ## Objective
 
